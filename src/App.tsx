@@ -1,21 +1,31 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ThemeProvider } from "./contexts/ThemeContext"
-import Sidebar from "./components/Sidebar"
-import Header from "./components/Header"
-import ConversationsPage from "./pages/ConversationsPage"
-import CustomersPage from "./pages/CustomersPage"
-import BotsPage from "./pages/BotsPage"
-import ChannelsPage from "./pages/ChannelsPage"
-import type { Bot, Conversation, Message, BotAgent, Channel, Customer, User } from "./types"
+import { useEffect, useState } from "react";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
+import ConversationsPage from "./pages/ConversationsPage";
+import CustomersPage from "./pages/CustomersPage";
+import BotsPage from "./pages/BotsPage";
+import ChannelsPage from "./pages/ChannelsPage";
+import type {
+  Bot,
+  Conversation,
+  Message,
+  BotAgent,
+  Channel,
+  Customer,
+  User,
+} from "./types";
+import socket from "../socket";
+import { getConversations } from "./service/conversations/getConversations";
 
 // Datos de ejemplo para bots simples
 const mockBots: Bot[] = [
   { id: "1", name: "Bot Soporte", isActive: true },
   { id: "2", name: "Bot Ventas", isActive: true },
   { id: "3", name: "Bot FAQ", isActive: false },
-]
+];
 
 // Datos de ejemplo para agentes de bots organizados por vertical
 const mockBotAgents: BotAgent[] = [
@@ -56,10 +66,16 @@ const mockBotAgents: BotAgent[] = [
   {
     id: "re-2",
     name: "Asistente de Propiedades",
-    description: "Bot básico para responder preguntas frecuentes sobre propiedades y servicios inmobiliarios.",
+    description:
+      "Bot básico para responder preguntas frecuentes sobre propiedades y servicios inmobiliarios.",
     category: "Soporte",
     vertical: "Real Estate",
-    features: ["FAQ automatizado", "Información de propiedades", "Horarios de oficina", "Contacto con agentes"],
+    features: [
+      "FAQ automatizado",
+      "Información de propiedades",
+      "Horarios de oficina",
+      "Contacto con agentes",
+    ],
     isActive: false,
     icon: "message",
     color: "bg-blue-600",
@@ -108,7 +124,8 @@ const mockBotAgents: BotAgent[] = [
   {
     id: "rest-2",
     name: "Sommelier Virtual",
-    description: "Especialista en recomendaciones de vinos y maridajes. Ideal para restaurantes gourmet.",
+    description:
+      "Especialista en recomendaciones de vinos y maridajes. Ideal para restaurantes gourmet.",
     category: "Especializado",
     vertical: "Restaurantes",
     features: [
@@ -134,7 +151,8 @@ const mockBotAgents: BotAgent[] = [
   {
     id: "ecom-1",
     name: "Asistente de Compras",
-    description: "Ayuda a los clientes a encontrar productos, gestiona carritos abandonados y procesa devoluciones.",
+    description:
+      "Ayuda a los clientes a encontrar productos, gestiona carritos abandonados y procesa devoluciones.",
     category: "Ventas",
     vertical: "E-commerce",
     features: [
@@ -165,7 +183,8 @@ const mockBotAgents: BotAgent[] = [
   {
     id: "ecom-2",
     name: "Experto en Productos",
-    description: "Bot especializado en especificaciones técnicas y comparativas de productos complejos.",
+    description:
+      "Bot especializado en especificaciones técnicas y comparativas de productos complejos.",
     category: "Soporte",
     vertical: "E-commerce",
     features: [
@@ -190,7 +209,8 @@ const mockBotAgents: BotAgent[] = [
   {
     id: "health-1",
     name: "Recepcionista Médico",
-    description: "Gestiona citas médicas, recordatorios y consultas básicas de salud con total privacidad.",
+    description:
+      "Gestiona citas médicas, recordatorios y consultas básicas de salud con total privacidad.",
     category: "Citas",
     vertical: "Salud",
     features: [
@@ -218,7 +238,8 @@ const mockBotAgents: BotAgent[] = [
   {
     id: "edu-1",
     name: "Tutor Virtual",
-    description: "Asistente educativo que ayuda con tareas, explica conceptos y programa sesiones de estudio.",
+    description:
+      "Asistente educativo que ayuda con tareas, explica conceptos y programa sesiones de estudio.",
     category: "Educación",
     vertical: "Educación",
     features: [
@@ -246,7 +267,8 @@ const mockBotAgents: BotAgent[] = [
   {
     id: "fin-1",
     name: "Asesor Financiero",
-    description: "Proporciona información sobre productos financieros, calcula préstamos y agenda citas con asesores.",
+    description:
+      "Proporciona información sobre productos financieros, calcula préstamos y agenda citas con asesores.",
     category: "Finanzas",
     vertical: "Servicios Financieros",
     features: [
@@ -274,7 +296,8 @@ const mockBotAgents: BotAgent[] = [
   {
     id: "tech-1",
     name: "Soporte Técnico L1",
-    description: "Resuelve problemas técnicos básicos, crea tickets y escala casos complejos al equipo humano.",
+    description:
+      "Resuelve problemas técnicos básicos, crea tickets y escala casos complejos al equipo humano.",
     category: "Soporte",
     vertical: "Tecnología",
     features: [
@@ -307,7 +330,8 @@ const mockBotAgents: BotAgent[] = [
   {
     id: "legal-1",
     name: "Asistente Legal",
-    description: "Proporciona información legal básica, agenda consultas y gestiona documentos simples.",
+    description:
+      "Proporciona información legal básica, agenda consultas y gestiona documentos simples.",
     category: "Legal",
     vertical: "Servicios Legales",
     features: [
@@ -335,7 +359,8 @@ const mockBotAgents: BotAgent[] = [
   {
     id: "travel-1",
     name: "Concierge Virtual",
-    description: "Asiste con reservas de viajes, recomendaciones locales y gestión de itinerarios.",
+    description:
+      "Asiste con reservas de viajes, recomendaciones locales y gestión de itinerarios.",
     category: "Turismo",
     vertical: "Viajes y Turismo",
     features: [
@@ -358,14 +383,15 @@ const mockBotAgents: BotAgent[] = [
     popularity: "medium",
     complexity: "intermediate",
   },
-]
+];
 
 // Datos de ejemplo para canales (mantenemos los existentes)
 const mockChannels: Channel[] = [
   {
     id: "channel-1",
     name: "Widget Web",
-    description: "Chat integrado en tu sitio web para atención inmediata a visitantes.",
+    description:
+      "Chat integrado en tu sitio web para atención inmediata a visitantes.",
     icon: "globe",
     color: "bg-blue-600",
     isActive: true,
@@ -392,7 +418,12 @@ const mockChannels: Channel[] = [
     isActive: true,
     isConnected: false,
     category: "Mensajería",
-    features: ["API oficial", "Mensajes multimedia", "Plantillas aprobadas", "Webhooks"],
+    features: [
+      "API oficial",
+      "Mensajes multimedia",
+      "Plantillas aprobadas",
+      "Webhooks",
+    ],
     setupRequired: true,
     stats: {
       messages: 1523,
@@ -403,25 +434,37 @@ const mockChannels: Channel[] = [
   {
     id: "channel-3",
     name: "Instagram Direct",
-    description: "Gestiona mensajes directos de Instagram desde una sola plataforma.",
+    description:
+      "Gestiona mensajes directos de Instagram desde una sola plataforma.",
     icon: "instagram",
     color: "bg-pink-600",
     isActive: false,
     isConnected: false,
     category: "Redes Sociales",
-    features: ["Mensajes directos", "Comentarios en posts", "Stories", "Automatización"],
+    features: [
+      "Mensajes directos",
+      "Comentarios en posts",
+      "Stories",
+      "Automatización",
+    ],
     setupRequired: true,
   },
   {
     id: "channel-4",
     name: "Facebook Messenger",
-    description: "Integra Facebook Messenger para atender a tu audiencia de Facebook.",
+    description:
+      "Integra Facebook Messenger para atender a tu audiencia de Facebook.",
     icon: "facebook",
     color: "bg-blue-700",
     isActive: false,
     isConnected: false,
     category: "Redes Sociales",
-    features: ["Messenger API", "Botones persistentes", "Plantillas", "Pagos integrados"],
+    features: [
+      "Messenger API",
+      "Botones persistentes",
+      "Plantillas",
+      "Pagos integrados",
+    ],
     setupRequired: true,
   },
   {
@@ -433,7 +476,12 @@ const mockChannels: Channel[] = [
     isActive: false,
     isConnected: false,
     category: "Mensajería",
-    features: ["Bot API", "Comandos personalizados", "Grupos y canales", "Inline keyboards"],
+    features: [
+      "Bot API",
+      "Comandos personalizados",
+      "Grupos y canales",
+      "Inline keyboards",
+    ],
     setupRequired: true,
   },
   {
@@ -445,14 +493,19 @@ const mockChannels: Channel[] = [
     isActive: true,
     isConnected: true,
     category: "Email",
-    features: ["Tickets automáticos", "Respuestas predefinidas", "Escalamiento", "SLA tracking"],
+    features: [
+      "Tickets automáticos",
+      "Respuestas predefinidas",
+      "Escalamiento",
+      "SLA tracking",
+    ],
     stats: {
       messages: 456,
       users: 234,
       responseRate: 98,
     },
   },
-]
+];
 
 // Datos de ejemplo para customers (mantenemos los existentes)
 const mockCustomers: Customer[] = [
@@ -509,7 +562,8 @@ const mockCustomers: Customer[] = [
     totalMessages: 23,
     averageResponseTime: "3m",
     satisfaction: 92,
-    notes: "Cliente mayorista con descuentos especiales. Contactar mensualmente para ofertas.",
+    notes:
+      "Cliente mayorista con descuentos especiales. Contactar mensualmente para ofertas.",
     source: "Instagram",
     status: "active",
   },
@@ -545,12 +599,14 @@ const mockCustomers: Customer[] = [
     totalMessages: 67,
     averageResponseTime: "1m",
     satisfaction: 98,
-    notes: "CTO de startup tecnológica. Muy activo en la comunidad. Posible caso de estudio.",
+    notes:
+      "CTO de startup tecnológica. Muy activo en la comunidad. Posible caso de estudio.",
     source: "Widget Web",
     status: "active",
   },
-]
+];
 
+/*
 const mockConversations: Conversation[] = [
   {
     id: "1",
@@ -619,7 +675,8 @@ const mockConversations: Conversation[] = [
       isContact: true,
       totalConversations: 8,
       lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 5),
-      notes: "Cliente mayorista con descuentos especiales. Contactar mensualmente para ofertas.",
+      notes:
+        "Cliente mayorista con descuentos especiales. Contactar mensualmente para ofertas.",
       source: "Instagram",
     },
     lastMessage: {
@@ -634,7 +691,7 @@ const mockConversations: Conversation[] = [
     isActive: true,
     channel: "Instagram",
   },
-]
+];
 
 const mockMessages: Message[] = [
   {
@@ -648,7 +705,8 @@ const mockMessages: Message[] = [
   {
     id: "2",
     conversationId: "1",
-    content: "Hola Juan, claro que sí. ¿Cuál es el problema específico con tu pedido?",
+    content:
+      "Hola Juan, claro que sí. ¿Cuál es el problema específico con tu pedido?",
     timestamp: new Date(Date.now() - 1000 * 60 * 40),
     isIncoming: false,
     isRead: true,
@@ -685,16 +743,50 @@ const mockMessages: Message[] = [
     isIncoming: true,
     isRead: true,
   },
-]
+];
+*/
 
 function AppContent() {
-  const [activeSection, setActiveSection] = useState("conversations")
-  const [selectedBot, setSelectedBot] = useState<Bot | null>(mockBots[0])
-  const [conversations, setConversations] = useState(mockConversations)
-  const [messages, setMessages] = useState(mockMessages)
-  const [botAgents, setBotAgents] = useState(mockBotAgents)
-  const [channels, setChannels] = useState(mockChannels)
-  const [customers, setCustomers] = useState(mockCustomers)
+  const [activeSection, setActiveSection] = useState("conversations");
+  const [selectedBot, setSelectedBot] = useState<Bot | null>(mockBots[0]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [botAgents, setBotAgents] = useState(mockBotAgents);
+  const [channels, setChannels] = useState(mockChannels);
+  const [customers, setCustomers] = useState(mockCustomers);
+
+  useEffect(() => {
+    async function loadConversations() {
+      const data = await getConversations();
+      setConversations(data);
+    }
+
+    loadConversations();
+  }, []);
+
+  useEffect(() => {
+    socket.on("newMessage", ({ conversationId, message }) => {
+      setMessages((prevMessages) => [...prevMessages, message]);
+
+      setConversations((prevConversations) => {
+        const updated = prevConversations.map((conv) =>
+          Number(conv.id) === Number(conversationId)
+            ? {
+                ...conv,
+                lastMessage: message,
+                unreadCount: conv.unreadCount + 1,
+                isActive: true,
+              }
+            : conv
+        );
+        return updated;
+      });
+    });
+
+    return () => {
+      socket.off("newMessage");
+    };
+  }, []);
 
   const handleSendMessage = (conversationId: string, content: string) => {
     const newMessage: Message = {
@@ -704,31 +796,46 @@ function AppContent() {
       timestamp: new Date(),
       isIncoming: false,
       isRead: true,
-    }
+      role: "user",
+    };
 
-    setMessages((prev) => [...prev, newMessage])
+    setMessages((prev) => [...prev, newMessage]);
 
     // Actualizar última mensaje en la conversación
     setConversations((prev) =>
-      prev.map((conv) => (conv.id === conversationId ? { ...conv, lastMessage: newMessage } : conv)),
-    )
-  }
+      prev.map((conv) =>
+        Number(conv.id) === Number(conversationId)
+          ? { ...conv, lastMessage: newMessage }
+          : conv
+      )
+    );
+  };
 
   const handleUpdateUser = (userId: string, updates: Partial<User>) => {
     setConversations((prev) =>
-      prev.map((conv) => (conv.user.id === userId ? { ...conv, user: { ...conv.user, ...updates } } : conv)),
-    )
-  }
+      prev.map((conv) =>
+        conv.user.id === userId
+          ? { ...conv, user: { ...conv.user, ...updates } }
+          : conv
+      )
+    );
+  };
 
   const handleAddToContacts = (userId: string) => {
     setConversations((prev) =>
-      prev.map((conv) => (conv.user.id === userId ? { ...conv, user: { ...conv.user, isContact: true } } : conv)),
-    )
-  }
+      prev.map((conv) =>
+        conv.user.id === userId
+          ? { ...conv, user: { ...conv.user, isContact: true } }
+          : conv
+      )
+    );
+  };
 
   const handleActivateBot = (botId: string) => {
-    setBotAgents((prev) => prev.map((bot) => (bot.id === botId ? { ...bot, isActive: true } : bot)))
-  }
+    setBotAgents((prev) =>
+      prev.map((bot) => (bot.id === botId ? { ...bot, isActive: true } : bot))
+    );
+  };
 
   const handleCreateBot = (botData: Omit<BotAgent, "id">) => {
     const newBot: BotAgent = {
@@ -740,25 +847,29 @@ function AppContent() {
         billingType: "per_agent",
         freeTrialDays: 14,
       },
-    }
-    setBotAgents((prev) => [...prev, newBot])
-  }
+    };
+    setBotAgents((prev) => [...prev, newBot]);
+  };
 
   const handleToggleChannel = (channelId: string) => {
     setChannels((prev) =>
-      prev.map((channel) => (channel.id === channelId ? { ...channel, isActive: !channel.isActive } : channel)),
-    )
-  }
+      prev.map((channel) =>
+        channel.id === channelId
+          ? { ...channel, isActive: !channel.isActive }
+          : channel
+      )
+    );
+  };
 
   const handleConfigureChannel = (channelId: string) => {
     // Aquí se abriría un modal de configuración
-    console.log("Configurar canal:", channelId)
-  }
+    console.log("Configurar canal:", channelId);
+  };
 
   const handleViewCustomer = (customer: Customer) => {
     // Aquí se podría abrir un modal detallado del customer o navegar a una vista específica
-    console.log("Ver perfil del cliente:", customer)
-  }
+    console.log("Ver perfil del cliente:", customer);
+  };
 
   const renderContent = () => {
     switch (activeSection) {
@@ -771,11 +882,22 @@ function AppContent() {
             onUpdateUser={handleUpdateUser}
             onAddToContacts={handleAddToContacts}
           />
-        )
+        );
       case "customers":
-        return <CustomersPage customers={customers} onViewCustomer={handleViewCustomer} />
+        return (
+          <CustomersPage
+            customers={customers}
+            onViewCustomer={handleViewCustomer}
+          />
+        );
       case "bots":
-        return <BotsPage bots={botAgents} onActivateBot={handleActivateBot} onCreateBot={handleCreateBot} />
+        return (
+          <BotsPage
+            bots={botAgents}
+            onActivateBot={handleActivateBot}
+            onCreateBot={handleCreateBot}
+          />
+        );
       case "channels":
         return (
           <ChannelsPage
@@ -783,7 +905,7 @@ function AppContent() {
             onToggleChannel={handleToggleChannel}
             onConfigureChannel={handleConfigureChannel}
           />
-        )
+        );
       default:
         return (
           <div className="flex items-center justify-center h-full">
@@ -791,39 +913,49 @@ function AppContent() {
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
                 {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
               </h2>
-              <p className="text-gray-500 dark:text-gray-400">Esta sección está en desarrollo</p>
+              <p className="text-gray-500 dark:text-gray-400">
+                Esta sección está en desarrollo
+              </p>
             </div>
           </div>
-        )
+        );
     }
-  }
+  };
 
   const getSectionTitle = () => {
     switch (activeSection) {
       case "conversations":
-        return "Conversaciones"
+        return "Conversaciones";
       case "customers":
-        return "Gestión de Clientes"
+        return "Gestión de Clientes";
       case "bots":
-        return "Marketplace de Agentes IA"
+        return "Marketplace de Agentes IA";
       case "channels":
-        return "Canales de Comunicación"
+        return "Canales de Comunicación";
       default:
-        return activeSection.charAt(0).toUpperCase() + activeSection.slice(1)
+        return activeSection.charAt(0).toUpperCase() + activeSection.slice(1);
     }
-  }
+  };
 
   return (
     <div className="h-screen flex bg-gray-100 dark:bg-gray-900">
-      <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <Sidebar
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+      />
 
       <div className="flex-1 flex flex-col">
-        <Header title={getSectionTitle()} selectedBot={selectedBot} bots={mockBots} onBotChange={setSelectedBot} />
+        <Header
+          title={getSectionTitle()}
+          selectedBot={selectedBot}
+          bots={mockBots}
+          onBotChange={setSelectedBot}
+        />
 
         <div className="flex-1 overflow-hidden">{renderContent()}</div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function App() {
@@ -831,5 +963,5 @@ export default function App() {
     <ThemeProvider>
       <AppContent />
     </ThemeProvider>
-  )
+  );
 }

@@ -1,61 +1,70 @@
-import { useState } from "react"
-import { User, Mail, Phone, MapPin, Tag, Plus, X, Save } from "lucide-react"
-import type { User as UserType } from "../types"
+import { useState } from "react";
+import { User, Mail, Phone, MapPin, Tag, Plus, X, Save } from "lucide-react";
+import type { User as UserType } from "../types";
 
 interface UserProfileProps {
-  user: UserType
-  onUpdateUser: (userId: string, updates: Partial<UserType>) => void
-  onAddToContacts: (userId: string) => void
+  user: UserType;
+  onUpdateUser: (userId: string, updates: Partial<UserType>) => void;
+  onAddToContacts: (userId: string) => void;
 }
 
-export default function UserProfile({ user, onUpdateUser, onAddToContacts }: UserProfileProps) {
-  const [isEditing, setIsEditing] = useState(false)
+export default function UserProfile({
+  user,
+  onUpdateUser,
+  onAddToContacts,
+}: UserProfileProps) {
+  const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     notes: user.notes || "",
     tags: user.tags || [],
     newTag: "",
-  })
+  });
 
   const handleSave = () => {
     onUpdateUser(user.id, {
       notes: editData.notes,
       tags: editData.tags,
-    })
-    setIsEditing(false)
-  }
+    });
+    setIsEditing(false);
+  };
 
   const handleAddTag = () => {
-    if (editData.newTag.trim() && !editData.tags.includes(editData.newTag.trim())) {
+    if (
+      editData.newTag.trim() &&
+      !editData.tags.includes(editData.newTag.trim())
+    ) {
       setEditData((prev) => ({
         ...prev,
         tags: [...prev.tags, prev.newTag.trim()],
         newTag: "",
-      }))
+      }));
     }
-  }
+  };
 
   const handleRemoveTag = (tagToRemove: string) => {
     setEditData((prev) => ({
       ...prev,
       tags: prev.tags.filter((tag) => tag !== tagToRemove),
-    }))
-  }
+    }));
+  };
 
   const formatDate = (date: Date | undefined) => {
-    if (!date) return "N/A"
+    if (!date) return "N/A";
     return date.toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
-    })
-  }
+    });
+  };
 
   return (
     <div className="w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Perfil del Usuario</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Perfil del Usuario
+          </h3>
           {!user.isContact && (
             <button
               onClick={() => onAddToContacts(user.id)}
@@ -69,13 +78,19 @@ export default function UserProfile({ user, onUpdateUser, onAddToContacts }: Use
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
             {user.avatar ? (
-              <img src={user.avatar || "/placeholder.svg"} alt={user.name} className="w-12 h-12 rounded-full" />
+              <img
+                src={user.avatar || "/placeholder.svg"}
+                alt={user.name}
+                className="w-12 h-12 rounded-full"
+              />
             ) : (
               <User className="w-6 h-6 text-gray-600 dark:text-gray-300" />
             )}
           </div>
           <div>
-            <h4 className="font-medium text-gray-900 dark:text-white">{user.name}</h4>
+            <h4 className="font-medium text-gray-900 dark:text-white">
+              {user.name}
+            </h4>
             {user.isContact && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
                 Contacto
@@ -87,7 +102,9 @@ export default function UserProfile({ user, onUpdateUser, onAddToContacts }: Use
 
       {/* Información de contacto */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Información de Contacto</h5>
+        <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+          Información de Contacto
+        </h5>
         <div className="space-y-2">
           {user.email && (
             <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
@@ -112,15 +129,25 @@ export default function UserProfile({ user, onUpdateUser, onAddToContacts }: Use
 
       {/* Estadísticas */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Estadísticas</h5>
+        <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+          Estadísticas
+        </h5>
         <div className="grid grid-cols-2 gap-3">
           <div className="text-center">
-            <div className="text-lg font-semibold text-gray-900 dark:text-white">{user.totalConversations || 0}</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Conversaciones</div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-white">
+              {user.totalConversations || 0}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              Conversaciones
+            </div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-semibold text-gray-900 dark:text-white">{formatDate(user.lastActivity)}</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Última actividad</div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-white">
+              {formatDate(user.lastActivity)}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              Última actividad
+            </div>
           </div>
         </div>
       </div>
@@ -128,7 +155,9 @@ export default function UserProfile({ user, onUpdateUser, onAddToContacts }: Use
       {/* Tags */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
-          <h5 className="text-sm font-medium text-gray-900 dark:text-white">Etiquetas</h5>
+          <h5 className="text-sm font-medium text-gray-900 dark:text-white">
+            Etiquetas
+          </h5>
           <button
             onClick={() => setIsEditing(!isEditing)}
             className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
@@ -159,7 +188,9 @@ export default function UserProfile({ user, onUpdateUser, onAddToContacts }: Use
               <input
                 type="text"
                 value={editData.newTag}
-                onChange={(e) => setEditData((prev) => ({ ...prev, newTag: e.target.value }))}
+                onChange={(e) =>
+                  setEditData((prev) => ({ ...prev, newTag: e.target.value }))
+                }
                 onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
                 placeholder="Nueva etiqueta"
                 className="flex-1 text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -184,7 +215,9 @@ export default function UserProfile({ user, onUpdateUser, onAddToContacts }: Use
               </span>
             ))}
             {(!user.tags || user.tags.length === 0) && (
-              <span className="text-sm text-gray-500 dark:text-gray-400">Sin etiquetas</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Sin etiquetas
+              </span>
             )}
           </div>
         )}
@@ -193,7 +226,9 @@ export default function UserProfile({ user, onUpdateUser, onAddToContacts }: Use
       {/* Notas */}
       <div className="flex-1 p-4">
         <div className="flex items-center justify-between mb-3">
-          <h5 className="text-sm font-medium text-gray-900 dark:text-white">Notas</h5>
+          <h5 className="text-sm font-medium text-gray-900 dark:text-white">
+            Notas
+          </h5>
           {isEditing && (
             <button
               onClick={handleSave}
@@ -208,14 +243,18 @@ export default function UserProfile({ user, onUpdateUser, onAddToContacts }: Use
         {isEditing ? (
           <textarea
             value={editData.notes}
-            onChange={(e) => setEditData((prev) => ({ ...prev, notes: e.target.value }))}
+            onChange={(e) =>
+              setEditData((prev) => ({ ...prev, notes: e.target.value }))
+            }
             placeholder="Agregar notas sobre este usuario..."
             className="w-full h-32 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
           />
         ) : (
-          <div className="text-sm text-gray-600 dark:text-gray-400">{user.notes || "Sin notas"}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {user.notes || "Sin notas"}
+          </div>
         )}
       </div>
     </div>
-  )
+  );
 }

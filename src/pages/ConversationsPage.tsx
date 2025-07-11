@@ -1,51 +1,100 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import ConversationList from "../components/ConversationList"
-import ChatWindow from "../components/ChatWindow"
-import type { Conversation, Message, User } from "../types"
+import { useEffect, useState } from "react";
+import ConversationList from "../components/ConversationList";
+import ChatWindow from "../components/ChatWindow";
+import type { Conversation, Message, User } from "../types";
+import { getConversationId } from "../service/conversations/getConversationId";
+import socket from "../../socket";
+import { postSendMessage } from "../service/conversations/postSendMessage";
 
 interface ConversationsPageProps {
-  conversations: Conversation[]
-  messages: Message[]
-  onSendMessage: (conversationId: string, content: string) => void
-  onUpdateUser: (userId: string, updates: Partial<User>) => void
-  onAddToContacts: (userId: string) => void
+  conversations: Conversation[];
+  messages: Message[]; // inicialmente puede venir vacío o con mensajes generales
+  onSendMessage: (conversationId: string, content: string) => void;
+  onUpdateUser: (userId: string, updates: Partial<User>) => void;
+  onAddToContacts: (userId: string) => void;
 }
 
 export default function ConversationsPage({
   conversations,
-  messages,
+  messages: initialMessages,
   onSendMessage,
   onUpdateUser,
   onAddToContacts,
 }: ConversationsPageProps) {
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
-  const [showUserProfile, setShowUserProfile] = useState(false)
+  const [selectedConversation, setSelectedConversation] =
+    useState<Conversation | null>(null);
+  const [showUserProfile, setShowUserProfile] = useState(false);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
 
-  const conversationMessages = selectedConversation
-    ? messages.filter((m) => m.conversationId === selectedConversation.id)
-    : []
+  useEffect(() => {
+    // Escucho evento de nuevo mensaje
+    socket.on("newMessage", (newMessage) => {
+      // Solo agrego el mensaje si es para la conversación seleccionada
+      if (
+        selectedConversation &&
+        newMessage.conversationId === selectedConversation.id
+      ) {
+        setMessages((prev) => [...prev, newMessage.message]);
+      }
+    });
 
-  const handleSendMessage = (content: string) => {
-    if (selectedConversation) {
-      onSendMessage(selectedConversation.id, content)
+    return () => {
+      socket.off("newMessage"); // limpio al desmontar el componente
+    };
+  }, [selectedConversation]);
+
+  const handleConversationSelect = async (conversation: Conversation) => {
+    setSelectedConversation(conversation);
+    setShowUserProfile(false);
+
+    try {
+      const conversationData = await getConversationId(Number(conversation.id));
+      // asumo que conversationData trae algo como { messages: Message[], ... }
+      if (conversationData.messages) {
+        setMessages(conversationData.messages);
+      } else {
+        setMessages([]); // no hay mensajes para esa conversación
+      }
+    } catch (error) {
+      console.error("Error cargando conversación:", error);
+      setMessages([]);
     }
-  }
+  };
+
+  const handleSendMessage = async (content: string) => {
+    if (selectedConversation) {
+      // Primero se dispara el callback para actualizar la UI
+      onSendMessage(selectedConversation.id, content);
+
+      try {
+        await postSendMessage({
+          userPhone: selectedConversation.userPhone!,
+          channel: selectedConversation.channel!,
+          agentId: 1,
+          role: "system",
+          content: content,
+          conversationId: Number(
+            selectedConversation.lastMessage.conversationId
+          ),
+        });
+      } catch (error) {
+        console.error("Error al enviar el mensaje:", error);
+      }
+    }
+  };
 
   return (
     <div className="flex h-full bg-gray-50 dark:bg-gray-900">
       <ConversationList
         conversations={conversations}
         selectedConversation={selectedConversation}
-        onConversationSelect={(conversation) => {
-          setSelectedConversation(conversation)
-          setShowUserProfile(false) // Reset profile view when switching conversations
-        }}
+        onConversationSelect={handleConversationSelect}
       />
       <ChatWindow
         conversation={selectedConversation}
-        messages={conversationMessages}
+        messages={messages}
         onSendMessage={handleSendMessage}
         onUpdateUser={onUpdateUser}
         onAddToContacts={onAddToContacts}
@@ -53,5 +102,5 @@ export default function ConversationsPage({
         onToggleUserProfile={() => setShowUserProfile(!showUserProfile)}
       />
     </div>
-  )
+  );
 }

@@ -14,6 +14,7 @@ interface ConversationsPageProps {
   onSendMessage: (conversationId: string, content: string) => void;
   onUpdateUser: (userId: string, updates: Partial<User>) => void;
   onAddToContacts: (userId: string) => void;
+  loading?: boolean;
 }
 
 export default function ConversationsPage({
@@ -22,6 +23,7 @@ export default function ConversationsPage({
   onSendMessage,
   onUpdateUser,
   onAddToContacts,
+  loading = false,
 }: ConversationsPageProps) {
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null);
@@ -91,6 +93,7 @@ export default function ConversationsPage({
         conversations={conversations}
         selectedConversation={selectedConversation}
         onConversationSelect={handleConversationSelect}
+        loading={loading}
       />
       <ChatWindow
         conversation={selectedConversation}

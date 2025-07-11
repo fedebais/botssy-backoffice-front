@@ -754,32 +754,52 @@ function AppContent() {
   const [botAgents, setBotAgents] = useState(mockBotAgents);
   const [channels, setChannels] = useState(mockChannels);
   const [customers, setCustomers] = useState(mockCustomers);
+  const [loadingConversations, setLoadingConversations] = useState(false);
 
   useEffect(() => {
     async function loadConversations() {
+      setLoadingConversations(true);
       const data = await getConversations();
       setConversations(data);
+      setLoadingConversations(false);
     }
 
     loadConversations();
   }, []);
 
   useEffect(() => {
-    socket.on("newMessage", ({ conversationId, message }) => {
+    socket.on("newMessage", ({ conversationId, message, user, channel }) => {
       setMessages((prevMessages) => [...prevMessages, message]);
 
       setConversations((prevConversations) => {
-        const updated = prevConversations.map((conv) =>
-          Number(conv.id) === Number(conversationId)
-            ? {
-                ...conv,
-                lastMessage: message,
-                unreadCount: conv.unreadCount + 1,
-                isActive: true,
-              }
-            : conv
+        const existingConversation = prevConversations.find(
+          (conv) => Number(conv.id) === Number(conversationId)
         );
-        return updated;
+
+        if (existingConversation) {
+          // Actualiza conversación existente
+          return prevConversations.map((conv) =>
+            Number(conv.id) === Number(conversationId)
+              ? {
+                  ...conv,
+                  lastMessage: message,
+                  unreadCount: conv.unreadCount + 1,
+                  isActive: true,
+                }
+              : conv
+          );
+        } else {
+          // Agrega nueva conversación
+          const newConversation: Conversation = {
+            id: conversationId,
+            user,
+            lastMessage: message,
+            unreadCount: 1,
+            isActive: true,
+            channel,
+          };
+          return [newConversation, ...prevConversations]; // nueva al inicio
+        }
       });
     });
 
@@ -881,6 +901,7 @@ function AppContent() {
             onSendMessage={handleSendMessage}
             onUpdateUser={handleUpdateUser}
             onAddToContacts={handleAddToContacts}
+            loading={loadingConversations}
           />
         );
       case "customers":

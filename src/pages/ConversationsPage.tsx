@@ -29,6 +29,7 @@ export default function ConversationsPage({
     useState<Conversation | null>(null);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [loadingMessages, setLoadingMessages] = useState(false);
 
   useEffect(() => {
     // Escucho evento de nuevo mensaje
@@ -50,6 +51,7 @@ export default function ConversationsPage({
   const handleConversationSelect = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
     setShowUserProfile(false);
+    setLoadingMessages(true);
 
     try {
       const conversationData = await getConversationId(Number(conversation.id));
@@ -62,6 +64,8 @@ export default function ConversationsPage({
     } catch (error) {
       console.error("Error cargando conversación:", error);
       setMessages([]);
+    } finally {
+      setLoadingMessages(false);
     }
   };
 
@@ -103,6 +107,7 @@ export default function ConversationsPage({
         onAddToContacts={onAddToContacts}
         showUserProfile={showUserProfile}
         onToggleUserProfile={() => setShowUserProfile(!showUserProfile)}
+        loading={loadingMessages}
       />
     </div>
   );

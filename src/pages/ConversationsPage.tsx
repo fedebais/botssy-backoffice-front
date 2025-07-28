@@ -7,6 +7,7 @@ import type { Conversation, Message, User } from "../types";
 import { getConversationId } from "../service/conversations/getConversationId";
 import socket from "../../socket";
 import { postSendMessage } from "../service/conversations/postSendMessage";
+import { useAuth } from "../contexts/AuthContext";
 
 interface ConversationsPageProps {
   conversations: Conversation[];
@@ -25,6 +26,7 @@ export default function ConversationsPage({
   onAddToContacts,
   loading = false,
 }: ConversationsPageProps) {
+  const { user } = useAuth();
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null);
   const [showUserProfile, setShowUserProfile] = useState(false);
@@ -84,7 +86,7 @@ export default function ConversationsPage({
           conversationId: Number(
             selectedConversation.lastMessage.conversationId
           ),
-          tenantId: 1,
+          tenantId: user?.tenantId || 0,
           //operatorId: 1,
         });
       } catch (error) {

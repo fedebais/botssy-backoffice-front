@@ -1,47 +1,50 @@
-"use client"
+"use client";
 
-import { User, Mail, Phone, MapPin, Tag } from "lucide-react"
-import type { Customer } from "../types"
+import { User, Mail, Phone, MapPin, Tag } from "lucide-react";
+import type { Customer } from "../types";
 
 interface CustomerCardProps {
-  customer: Customer
-  onViewProfile: (customer: Customer) => void
+  customer: Customer;
+  onViewProfile: (customer: Customer) => void;
 }
 
-export default function CustomerCard({ customer, onViewProfile }: CustomerCardProps) {
+export default function CustomerCard({
+  customer,
+  onViewProfile,
+}: CustomerCardProps) {
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
-    })
-  }
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800"
+        return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800";
       case "inactive":
-        return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
+        return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600";
       case "blocked":
-        return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800"
+        return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800";
       default:
-        return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
+        return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600";
     }
-  }
+  };
 
   const getStatusText = (status: string) => {
     switch (status) {
       case "active":
-        return "Activo"
+        return "Activo";
       case "inactive":
-        return "Inactivo"
+        return "Inactivo";
       case "blocked":
-        return "Bloqueado"
+        return "Bloqueado";
       default:
-        return status
+        return status;
     }
-  }
+  };
 
   return (
     <div
@@ -67,7 +70,9 @@ export default function CustomerCard({ customer, onViewProfile }: CustomerCardPr
             </h3>
             <div className="flex items-center space-x-2 mt-1">
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(customer.status)}`}
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                  customer.status
+                )}`}
               >
                 {getStatusText(customer.status)}
               </span>
@@ -110,16 +115,28 @@ export default function CustomerCard({ customer, onViewProfile }: CustomerCardPr
 
       <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-600">
         <div className="text-center">
-          <div className="text-lg font-semibold text-gray-900 dark:text-white">{customer.totalConversations}</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">Conversaciones</div>
+          <div className="text-lg font-semibold text-gray-900 dark:text-white">
+            {customer.totalConversations}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            Conversaciones
+          </div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-semibold text-gray-900 dark:text-white">{customer.totalMessages}</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">Mensajes</div>
+          <div className="text-lg font-semibold text-gray-900 dark:text-white">
+            {customer.totalMessages}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            Mensajes
+          </div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-semibold text-gray-900 dark:text-white">{customer.satisfaction || "N/A"}%</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">Satisfacción</div>
+          <div className="text-lg font-semibold text-gray-900 dark:text-white">
+            {customer.satisfaction || "N/A"}%
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            Satisfacción
+          </div>
         </div>
       </div>
 
@@ -151,5 +168,5 @@ export default function CustomerCard({ customer, onViewProfile }: CustomerCardPr
         </div>
       </div>
     </div>
-  )
+  );
 }

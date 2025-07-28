@@ -17,7 +17,7 @@ import type {
   Customer,
   User,
 } from "./types";
-//import socket from "../socket";
+import socket from "../socket";
 import { getConversations } from "./service/conversations/getConversations";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import AuthPage from "./pages/AuthPage";
@@ -635,7 +635,6 @@ function AppContent() {
     loadConversations();
   }, [user?.tenantId]);
 
-  /*
   useEffect(() => {
     socket.on("newMessage", ({ conversationId, message, user, channel }) => {
       setMessages((prevMessages) => [...prevMessages, message]);
@@ -676,7 +675,6 @@ function AppContent() {
       socket.off("newMessage");
     };
   }, []);
-*/
 
   // Mostrar loading mientras se verifica la autenticación
   if (isLoading) {

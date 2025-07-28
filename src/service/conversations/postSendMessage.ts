@@ -3,34 +3,38 @@ export const API_URL = "http://localhost:3000";
 export async function postSendMessage({
   userPhone,
   channel,
-  agentId,
   role,
   content,
   conversationId,
   operatorId,
+  tenantId,
+  botId,
 }: {
   userPhone: string;
   channel: string;
-  agentId: number;
+  botId: number;
   role: "user" | "assistant" | "operator" | "system";
   content: string;
   operatorId?: number;
   conversationId?: number;
+  tenantId: number;
 }) {
   try {
-    const res = await fetch(`${API_URL}/api/conversations`, {
+    const res = await fetch(`${API_URL}/conversations`, {
       method: "POST",
       headers: {
+        Authorization: `Bearer ${localStorage.getItem("botssy_token")}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         userPhone,
         channel,
-        agentId,
+        botId,
         role,
         content,
         conversationId,
         operatorId,
+        tenantId,
       }),
     });
 

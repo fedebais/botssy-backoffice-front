@@ -29,8 +29,10 @@ export default function ConversationsPage({
     useState<Conversation | null>(null);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
+  console.log(messages);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
+  /*
   useEffect(() => {
     // Escucho evento de nuevo mensaje
     socket.on("newMessage", (newMessage) => {
@@ -47,7 +49,7 @@ export default function ConversationsPage({
       socket.off("newMessage"); // limpio al desmontar el componente
     };
   }, [selectedConversation]);
-
+*/
   const handleConversationSelect = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
     setShowUserProfile(false);
@@ -78,12 +80,14 @@ export default function ConversationsPage({
         await postSendMessage({
           userPhone: selectedConversation.userPhone!,
           channel: selectedConversation.channel!,
-          agentId: 1,
           role: "system",
           content: content,
+          botId: 1,
           conversationId: Number(
             selectedConversation.lastMessage.conversationId
           ),
+          tenantId: 1,
+          //operatorId: 1,
         });
       } catch (error) {
         console.error("Error al enviar el mensaje:", error);

@@ -17,8 +17,11 @@ import type {
   Customer,
   User,
 } from "./types";
-import socket from "../socket";
+//import socket from "../socket";
 import { getConversations } from "./service/conversations/getConversations";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import AuthPage from "./pages/AuthPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Datos de ejemplo para bots simples
 const mockBots: Bot[] = [
@@ -606,147 +609,8 @@ const mockCustomers: Customer[] = [
   },
 ];
 
-/*
-const mockConversations: Conversation[] = [
-  {
-    id: "1",
-    user: {
-      id: "1",
-      name: "Juan Pérez",
-      email: "juan.perez@email.com",
-      phone: "+34 612 345 678",
-      location: "Madrid, España",
-      tags: ["VIP", "Soporte Técnico", "Empresa"],
-      isContact: true,
-      totalConversations: 12,
-      lastActivity: new Date(Date.now() - 1000 * 60 * 30),
-      notes:
-        "Cliente muy importante, siempre requiere atención prioritaria. Contacto técnico principal de Tech Solutions.",
-      source: "Widget Web",
-    },
-    lastMessage: {
-      id: "1",
-      conversationId: "1",
-      content: "¿Podrían ayudarme con mi pedido?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30),
-      isIncoming: true,
-      isRead: false,
-    },
-    unreadCount: 2,
-    isActive: true,
-    channel: "Widget Web",
-  },
-  {
-    id: "2",
-    user: {
-      id: "2",
-      name: "María García",
-      email: "maria.garcia@gmail.com",
-      phone: "+34 687 654 321",
-      location: "Barcelona, España",
-      tags: ["Nuevo Cliente", "Ventas"],
-      isContact: false,
-      totalConversations: 3,
-      lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 2),
-      notes: "Interesada en nuestros servicios premium. Seguimiento pendiente.",
-      source: "WhatsApp",
-    },
-    lastMessage: {
-      id: "2",
-      conversationId: "2",
-      content: "Perfecto, muchas gracias por la información",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-      isIncoming: true,
-      isRead: true,
-    },
-    unreadCount: 0,
-    isActive: false,
-    channel: "WhatsApp",
-  },
-  {
-    id: "3",
-    user: {
-      id: "3",
-      name: "Carlos López",
-      email: "carlos.lopez@empresa.com",
-      phone: "+34 654 987 321",
-      location: "Valencia, España",
-      tags: ["Descuentos", "Mayorista"],
-      isContact: true,
-      totalConversations: 8,
-      lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 5),
-      notes:
-        "Cliente mayorista con descuentos especiales. Contactar mensualmente para ofertas.",
-      source: "Instagram",
-    },
-    lastMessage: {
-      id: "3",
-      conversationId: "3",
-      content: "¿Tienen descuentos disponibles?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5),
-      isIncoming: true,
-      isRead: false,
-    },
-    unreadCount: 1,
-    isActive: true,
-    channel: "Instagram",
-  },
-];
-
-const mockMessages: Message[] = [
-  {
-    id: "1",
-    conversationId: "1",
-    content: "Hola, necesito ayuda con mi pedido #12345",
-    timestamp: new Date(Date.now() - 1000 * 60 * 45),
-    isIncoming: true,
-    isRead: true,
-  },
-  {
-    id: "2",
-    conversationId: "1",
-    content:
-      "Hola Juan, claro que sí. ¿Cuál es el problema específico con tu pedido?",
-    timestamp: new Date(Date.now() - 1000 * 60 * 40),
-    isIncoming: false,
-    isRead: true,
-  },
-  {
-    id: "3",
-    conversationId: "1",
-    content: "¿Podrían ayudarme con mi pedido?",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
-    isIncoming: true,
-    isRead: false,
-  },
-  {
-    id: "4",
-    conversationId: "2",
-    content: "Hola, ¿qué horarios de atención tienen?",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3),
-    isIncoming: true,
-    isRead: true,
-  },
-  {
-    id: "5",
-    conversationId: "2",
-    content: "Nuestro horario es de lunes a viernes de 9:00 a 18:00",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2.5),
-    isIncoming: false,
-    isRead: true,
-  },
-  {
-    id: "6",
-    conversationId: "2",
-    content: "Perfecto, muchas gracias por la información",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    isIncoming: true,
-    isRead: true,
-  },
-];
-*/
-
 function AppContent() {
+  const { isAuthenticated, isLoading, user } = useAuth();
   const [activeSection, setActiveSection] = useState("conversations");
   const [selectedBot, setSelectedBot] = useState<Bot | null>(mockBots[0]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -758,15 +622,20 @@ function AppContent() {
 
   useEffect(() => {
     async function loadConversations() {
+      if (!user?.tenantId) {
+        console.warn("No hay tenantId para cargar conversaciones");
+        return;
+      }
       setLoadingConversations(true);
-      const data = await getConversations();
+      const data = await getConversations(user.tenantId);
       setConversations(data);
       setLoadingConversations(false);
     }
 
     loadConversations();
-  }, []);
+  }, [user?.tenantId]);
 
+  /*
   useEffect(() => {
     socket.on("newMessage", ({ conversationId, message, user, channel }) => {
       setMessages((prevMessages) => [...prevMessages, message]);
@@ -807,6 +676,24 @@ function AppContent() {
       socket.off("newMessage");
     };
   }, []);
+*/
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar página de autenticación si no está logueado
+  if (!isAuthenticated) {
+    return <AuthPage />;
+  }
 
   const handleSendMessage = (conversationId: string, content: string) => {
     const newMessage: Message = {
@@ -959,30 +846,34 @@ function AppContent() {
   };
 
   return (
-    <div className="h-screen flex bg-gray-100 dark:bg-gray-900">
-      <Sidebar
-        activeSection={activeSection}
-        onSectionChange={setActiveSection}
-      />
-
-      <div className="flex-1 flex flex-col">
-        <Header
-          title={getSectionTitle()}
-          selectedBot={selectedBot}
-          bots={mockBots}
-          onBotChange={setSelectedBot}
+    <ProtectedRoute>
+      <div className="h-screen flex bg-gray-100 dark:bg-gray-900">
+        <Sidebar
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
         />
 
-        <div className="flex-1 overflow-hidden">{renderContent()}</div>
+        <div className="flex-1 flex flex-col">
+          <Header
+            title={getSectionTitle()}
+            selectedBot={selectedBot}
+            bots={mockBots}
+            onBotChange={setSelectedBot}
+          />
+
+          <div className="flex-1 overflow-hidden">{renderContent()}</div>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }
 
 export default function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

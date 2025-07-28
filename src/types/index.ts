@@ -12,6 +12,7 @@ export interface User {
   totalConversations?: number;
   notes?: string;
   source?: string;
+  tenantId: number;
 }
 
 export interface Message {

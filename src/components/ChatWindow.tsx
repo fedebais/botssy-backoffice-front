@@ -2,9 +2,10 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Send, UserIcon } from "lucide-react";
+import { Send, User, UserIcon } from "lucide-react";
 import UserProfile from "./UserProfile";
 import type { Conversation, Message, User } from "../types";
+import getInitials from "../utils/getInitials";
 
 interface ChatWindowProps {
   conversation: Conversation | null;
@@ -138,12 +139,26 @@ export default function ChatWindow({
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {/*conversation.user.name.charAt(0).toUpperCase()*/}
+                  {conversation.user?.avatar ? (
+                    <img
+                      src={conversation.user.avatar}
+                      alt={conversation.user.name}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : conversation.customer?.name ? (
+                    <span className="text-xl font-medium text-gray-700 dark:text-gray-300">
+                      {getInitials(conversation.customer.name)}
+                    </span>
+                  ) : (
+                    <User className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+                  )}
                 </span>
               </div>
               <div>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                  {/*conversation.user.name*/} {conversation.userPhone}
+                  {conversation.customer?.name !== null
+                    ? conversation.customer?.name
+                    : conversation.userPhone}
                 </h3>
                 <div className="flex items-center space-x-2">
                   <p className="text-sm text-gray-500 dark:text-gray-400">

@@ -15,6 +15,19 @@ export interface User {
   tenantId: number;
 }
 
+export interface Customer {
+  id: number;
+  name: string;
+  phone?: string;
+  email?: string;
+  company?: string;
+  position?: string;
+  tags: string[];
+  notes: string;
+  customFields?: any;
+  lastMessage?: string;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
@@ -34,6 +47,7 @@ export interface Conversation {
   channel?: string;
   userPhone?: string;
   agentId?: number;
+  customer?: Customer;
 }
 
 export interface Bot {

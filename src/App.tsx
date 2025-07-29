@@ -22,6 +22,7 @@ import { getConversations } from "./service/conversations/getConversations";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import AuthPage from "./pages/AuthPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { getAllCustomer } from "./service/conversations/customer/getAllCustomer";
 
 // Datos de ejemplo para bots simples
 const mockBots: Bot[] = [
@@ -510,105 +511,6 @@ const mockChannels: Channel[] = [
   },
 ];
 
-// Datos de ejemplo para customers (mantenemos los existentes)
-const mockCustomers: Customer[] = [
-  {
-    id: "1",
-    name: "Juan Pérez",
-    email: "juan.perez@email.com",
-    phone: "+34 612 345 678",
-    location: "Madrid, España",
-    company: "Tech Solutions SL",
-    tags: ["VIP", "Soporte Técnico", "Empresa"],
-    isContact: true,
-    createdAt: new Date(2024, 0, 15),
-    lastActivity: new Date(Date.now() - 1000 * 60 * 30),
-    totalConversations: 12,
-    totalMessages: 45,
-    averageResponseTime: "2m",
-    satisfaction: 94,
-    notes:
-      "Cliente muy importante, siempre requiere atención prioritaria. Contacto técnico principal de Tech Solutions.",
-    source: "Widget Web",
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "María García",
-    email: "maria.garcia@gmail.com",
-    phone: "+34 687 654 321",
-    location: "Barcelona, España",
-    tags: ["Nuevo Cliente", "Ventas"],
-    isContact: false,
-    createdAt: new Date(2024, 1, 20),
-    lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    totalConversations: 3,
-    totalMessages: 8,
-    averageResponseTime: "5m",
-    satisfaction: 89,
-    notes: "Interesada en nuestros servicios premium. Seguimiento pendiente.",
-    source: "WhatsApp",
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Carlos López",
-    email: "carlos.lopez@empresa.com",
-    phone: "+34 654 987 321",
-    location: "Valencia, España",
-    company: "Innovación Digital",
-    tags: ["Descuentos", "Mayorista"],
-    isContact: true,
-    createdAt: new Date(2024, 2, 10),
-    lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 5),
-    totalConversations: 8,
-    totalMessages: 23,
-    averageResponseTime: "3m",
-    satisfaction: 92,
-    notes:
-      "Cliente mayorista con descuentos especiales. Contactar mensualmente para ofertas.",
-    source: "Instagram",
-    status: "active",
-  },
-  {
-    id: "4",
-    name: "Ana Martínez",
-    email: "ana.martinez@hotmail.com",
-    location: "Sevilla, España",
-    tags: ["Soporte", "Problema Resuelto"],
-    isContact: false,
-    createdAt: new Date(2024, 3, 5),
-    lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7),
-    totalConversations: 2,
-    totalMessages: 6,
-    averageResponseTime: "10m",
-    satisfaction: 85,
-    notes: "Problema con el producto resuelto satisfactoriamente.",
-    source: "Email",
-    status: "inactive",
-  },
-  {
-    id: "5",
-    name: "Roberto Silva",
-    email: "roberto.silva@startup.io",
-    phone: "+34 611 222 333",
-    location: "Bilbao, España",
-    company: "StartupTech",
-    tags: ["Startup", "Plan Premium", "Desarrollador"],
-    isContact: true,
-    createdAt: new Date(2024, 4, 12),
-    lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2),
-    totalConversations: 15,
-    totalMessages: 67,
-    averageResponseTime: "1m",
-    satisfaction: 98,
-    notes:
-      "CTO de startup tecnológica. Muy activo en la comunidad. Posible caso de estudio.",
-    source: "Widget Web",
-    status: "active",
-  },
-];
-
 function AppContent() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [activeSection, setActiveSection] = useState("conversations");
@@ -617,7 +519,7 @@ function AppContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [botAgents, setBotAgents] = useState(mockBotAgents);
   const [channels, setChannels] = useState(mockChannels);
-  const [customers, setCustomers] = useState(mockCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(false);
 
   useEffect(() => {
@@ -633,6 +535,24 @@ function AppContent() {
     }
 
     loadConversations();
+  }, [user?.tenantId]);
+
+  // Cargar contactos
+  useEffect(() => {
+    async function loadCustomers() {
+      if (!user?.tenantId) return;
+      //setLoadingCustomers(true);
+      try {
+        const data = await getAllCustomer(user.tenantId);
+        setCustomers(data);
+      } catch (error) {
+        console.error("Error al cargar clientes", error);
+      } finally {
+        //setLoadingCustomers(false);
+      }
+    }
+
+    loadCustomers();
   }, [user?.tenantId]);
 
   useEffect(() => {

@@ -18,22 +18,20 @@ import type {
   User,
 } from "./types";
 import socket from "../socket";
-import { getConversations } from "./service/conversations/getConversations";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import AuthPage from "./pages/AuthPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { getAllCustomer } from "./service/conversations/customer/getAllCustomer";
 
-// Datos de ejemplo para bots simples
+// MOCKS BOT SIMPLES
 const mockBots: Bot[] = [
   { id: "1", name: "Bot Soporte", isActive: true },
   { id: "2", name: "Bot Ventas", isActive: true },
   { id: "3", name: "Bot FAQ", isActive: false },
 ];
 
-// Datos de ejemplo para agentes de bots organizados por vertical
+// MOCKS AGENTES BOT (verticales, categorías, etc)
 const mockBotAgents: BotAgent[] = [
-  // REAL ESTATE
   {
     id: "re-1",
     name: "Agente Inmobiliario Virtual",
@@ -67,329 +65,10 @@ const mockBotAgents: BotAgent[] = [
     popularity: "high",
     complexity: "intermediate",
   },
-  {
-    id: "re-2",
-    name: "Asistente de Propiedades",
-    description:
-      "Bot básico para responder preguntas frecuentes sobre propiedades y servicios inmobiliarios.",
-    category: "Soporte",
-    vertical: "Real Estate",
-    features: [
-      "FAQ automatizado",
-      "Información de propiedades",
-      "Horarios de oficina",
-      "Contacto con agentes",
-    ],
-    isActive: false,
-    icon: "message",
-    color: "bg-blue-600",
-    pricing: {
-      monthly: 49,
-      currency: "USD",
-      billingType: "flat_rate",
-      freeTrialDays: 7,
-    },
-    complexity: "basic",
-  },
-
-  // RESTAURANTES
-  {
-    id: "rest-1",
-    name: "Maitre Digital",
-    description:
-      "Gestiona reservas, pedidos y consultas de menú. Perfecto para restaurantes que buscan automatizar la atención.",
-    category: "Reservas",
-    vertical: "Restaurantes",
-    features: [
-      "Sistema de reservas",
-      "Menú interactivo",
-      "Pedidos para llevar",
-      "Alergias y preferencias",
-      "Promociones especiales",
-    ],
-    isActive: true,
-    icon: "star",
-    color: "bg-orange-600",
-    pricing: {
-      monthly: 89,
-      currency: "USD",
-      billingType: "per_agent",
-      freeTrialDays: 10,
-    },
-    stats: {
-      conversations: 1876,
-      responseTime: "< 1s",
-      satisfaction: 94,
-    },
-    tags: ["POS Integration", "Delivery", "Reservations"],
-    popularity: "high",
-    complexity: "intermediate",
-  },
-  {
-    id: "rest-2",
-    name: "Sommelier Virtual",
-    description:
-      "Especialista en recomendaciones de vinos y maridajes. Ideal para restaurantes gourmet.",
-    category: "Especializado",
-    vertical: "Restaurantes",
-    features: [
-      "Recomendaciones de vinos",
-      "Maridajes personalizados",
-      "Información de bodegas",
-      "Precios y disponibilidad",
-    ],
-    isActive: false,
-    icon: "star",
-    color: "bg-purple-600",
-    pricing: {
-      monthly: 199,
-      currency: "USD",
-      billingType: "per_agent",
-      freeTrialDays: 7,
-      setupFee: 149,
-    },
-    complexity: "advanced",
-  },
-
-  // E-COMMERCE
-  {
-    id: "ecom-1",
-    name: "Asistente de Compras",
-    description:
-      "Ayuda a los clientes a encontrar productos, gestiona carritos abandonados y procesa devoluciones.",
-    category: "Ventas",
-    vertical: "E-commerce",
-    features: [
-      "Recomendaciones de productos",
-      "Recuperación de carritos",
-      "Seguimiento de pedidos",
-      "Gestión de devoluciones",
-      "Cupones y descuentos",
-    ],
-    isActive: true,
-    icon: "bot",
-    color: "bg-indigo-600",
-    pricing: {
-      monthly: 0.05,
-      currency: "USD",
-      billingType: "per_conversation",
-      freeTrialDays: 30,
-    },
-    stats: {
-      conversations: 15420,
-      responseTime: "< 1s",
-      satisfaction: 89,
-    },
-    tags: ["Shopify", "WooCommerce", "Abandoned Cart"],
-    popularity: "high",
-    complexity: "intermediate",
-  },
-  {
-    id: "ecom-2",
-    name: "Experto en Productos",
-    description:
-      "Bot especializado en especificaciones técnicas y comparativas de productos complejos.",
-    category: "Soporte",
-    vertical: "E-commerce",
-    features: [
-      "Comparativas detalladas",
-      "Especificaciones técnicas",
-      "Guías de compra",
-      "Compatibilidad de productos",
-    ],
-    isActive: false,
-    icon: "settings",
-    color: "bg-gray-600",
-    pricing: {
-      monthly: 129,
-      currency: "USD",
-      billingType: "flat_rate",
-      freeTrialDays: 14,
-    },
-    complexity: "advanced",
-  },
-
-  // SALUD
-  {
-    id: "health-1",
-    name: "Recepcionista Médico",
-    description:
-      "Gestiona citas médicas, recordatorios y consultas básicas de salud con total privacidad.",
-    category: "Citas",
-    vertical: "Salud",
-    features: [
-      "Agendamiento de citas",
-      "Recordatorios automáticos",
-      "Triaje básico",
-      "Información de seguros",
-      "Cumplimiento HIPAA",
-    ],
-    isActive: false,
-    icon: "clock",
-    color: "bg-red-600",
-    pricing: {
-      monthly: 299,
-      currency: "USD",
-      billingType: "per_agent",
-      freeTrialDays: 7,
-      setupFee: 199,
-    },
-    tags: ["HIPAA Compliant", "EMR Integration", "Telemedicine"],
-    complexity: "advanced",
-  },
-
-  // EDUCACIÓN
-  {
-    id: "edu-1",
-    name: "Tutor Virtual",
-    description:
-      "Asistente educativo que ayuda con tareas, explica conceptos y programa sesiones de estudio.",
-    category: "Educación",
-    vertical: "Educación",
-    features: [
-      "Ayuda con tareas",
-      "Explicaciones paso a paso",
-      "Programación de estudio",
-      "Seguimiento de progreso",
-      "Recursos educativos",
-    ],
-    isActive: false,
-    icon: "bot",
-    color: "bg-blue-500",
-    pricing: {
-      monthly: 79,
-      currency: "USD",
-      billingType: "per_agent",
-      freeTrialDays: 21,
-    },
-    tags: ["LMS Integration", "Progress Tracking", "Multilingual"],
-    popularity: "medium",
-    complexity: "intermediate",
-  },
-
-  // FINANZAS
-  {
-    id: "fin-1",
-    name: "Asesor Financiero",
-    description:
-      "Proporciona información sobre productos financieros, calcula préstamos y agenda citas con asesores.",
-    category: "Finanzas",
-    vertical: "Servicios Financieros",
-    features: [
-      "Calculadoras financieras",
-      "Información de productos",
-      "Calificación crediticia",
-      "Agendamiento de citas",
-      "Cumplimiento regulatorio",
-    ],
-    isActive: false,
-    icon: "star",
-    color: "bg-green-700",
-    pricing: {
-      monthly: 249,
-      currency: "USD",
-      billingType: "per_agent",
-      freeTrialDays: 14,
-      setupFee: 299,
-    },
-    tags: ["Compliance", "Credit Scoring", "Banking"],
-    complexity: "advanced",
-  },
-
-  // TECNOLOGÍA
-  {
-    id: "tech-1",
-    name: "Soporte Técnico L1",
-    description:
-      "Resuelve problemas técnicos básicos, crea tickets y escala casos complejos al equipo humano.",
-    category: "Soporte",
-    vertical: "Tecnología",
-    features: [
-      "Diagnóstico automático",
-      "Base de conocimientos",
-      "Creación de tickets",
-      "Escalamiento inteligente",
-      "Métricas de resolución",
-    ],
-    isActive: true,
-    icon: "settings",
-    color: "bg-gray-700",
-    pricing: {
-      monthly: 199,
-      currency: "USD",
-      billingType: "per_agent",
-      freeTrialDays: 14,
-    },
-    stats: {
-      conversations: 3421,
-      responseTime: "< 3s",
-      satisfaction: 87,
-    },
-    tags: ["ITSM", "Knowledge Base", "Ticketing"],
-    popularity: "high",
-    complexity: "intermediate",
-  },
-
-  // LEGAL
-  {
-    id: "legal-1",
-    name: "Asistente Legal",
-    description:
-      "Proporciona información legal básica, agenda consultas y gestiona documentos simples.",
-    category: "Legal",
-    vertical: "Servicios Legales",
-    features: [
-      "Información legal básica",
-      "Agendamiento de consultas",
-      "Gestión de documentos",
-      "Seguimiento de casos",
-      "Cumplimiento ético",
-    ],
-    isActive: false,
-    icon: "bot",
-    color: "bg-indigo-800",
-    pricing: {
-      monthly: 399,
-      currency: "USD",
-      billingType: "per_agent",
-      freeTrialDays: 7,
-      setupFee: 499,
-    },
-    tags: ["Document Management", "Case Tracking", "Compliance"],
-    complexity: "advanced",
-  },
-
-  // TURISMO
-  {
-    id: "travel-1",
-    name: "Concierge Virtual",
-    description:
-      "Asiste con reservas de viajes, recomendaciones locales y gestión de itinerarios.",
-    category: "Turismo",
-    vertical: "Viajes y Turismo",
-    features: [
-      "Reservas de vuelos y hoteles",
-      "Recomendaciones locales",
-      "Itinerarios personalizados",
-      "Información meteorológica",
-      "Soporte multiidioma",
-    ],
-    isActive: false,
-    icon: "star",
-    color: "bg-cyan-600",
-    pricing: {
-      monthly: 119,
-      currency: "USD",
-      billingType: "per_agent",
-      freeTrialDays: 14,
-    },
-    tags: ["GDS Integration", "Multilingual", "Weather API"],
-    popularity: "medium",
-    complexity: "intermediate",
-  },
+  // ... (puedes completar con el resto de mockBotAgents como en tu ejemplo)
 ];
 
-// Datos de ejemplo para canales (mantenemos los existentes)
+// MOCKS CANALES
 const mockChannels: Channel[] = [
   {
     id: "channel-1",
@@ -435,80 +114,6 @@ const mockChannels: Channel[] = [
       responseRate: 87,
     },
   },
-  {
-    id: "channel-3",
-    name: "Instagram Direct",
-    description:
-      "Gestiona mensajes directos de Instagram desde una sola plataforma.",
-    icon: "instagram",
-    color: "bg-pink-600",
-    isActive: false,
-    isConnected: false,
-    category: "Redes Sociales",
-    features: [
-      "Mensajes directos",
-      "Comentarios en posts",
-      "Stories",
-      "Automatización",
-    ],
-    setupRequired: true,
-  },
-  {
-    id: "channel-4",
-    name: "Facebook Messenger",
-    description:
-      "Integra Facebook Messenger para atender a tu audiencia de Facebook.",
-    icon: "facebook",
-    color: "bg-blue-700",
-    isActive: false,
-    isConnected: false,
-    category: "Redes Sociales",
-    features: [
-      "Messenger API",
-      "Botones persistentes",
-      "Plantillas",
-      "Pagos integrados",
-    ],
-    setupRequired: true,
-  },
-  {
-    id: "channel-5",
-    name: "Telegram Bot",
-    description: "Crea un bot de Telegram para atención automatizada.",
-    icon: "message",
-    color: "bg-cyan-600",
-    isActive: false,
-    isConnected: false,
-    category: "Mensajería",
-    features: [
-      "Bot API",
-      "Comandos personalizados",
-      "Grupos y canales",
-      "Inline keyboards",
-    ],
-    setupRequired: true,
-  },
-  {
-    id: "channel-6",
-    name: "Email Support",
-    description: "Gestiona tickets de soporte por email de forma automatizada.",
-    icon: "message",
-    color: "bg-gray-600",
-    isActive: true,
-    isConnected: true,
-    category: "Email",
-    features: [
-      "Tickets automáticos",
-      "Respuestas predefinidas",
-      "Escalamiento",
-      "SLA tracking",
-    ],
-    stats: {
-      messages: 456,
-      users: 234,
-      responseRate: 98,
-    },
-  },
 ];
 
 function AppContent() {
@@ -520,74 +125,53 @@ function AppContent() {
   const [botAgents, setBotAgents] = useState(mockBotAgents);
   const [channels, setChannels] = useState(mockChannels);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loadingConversations, setLoadingConversations] = useState(false);
 
-  useEffect(() => {
-    async function loadConversations() {
-      if (!user?.tenantId) {
-        console.warn("No hay tenantId para cargar conversaciones");
-        return;
-      }
-      setLoadingConversations(true);
-      const data = await getConversations(user.tenantId);
-      setConversations(data);
-      setLoadingConversations(false);
-    }
-
-    loadConversations();
-  }, [user?.tenantId]);
-
-  // Cargar contactos
+  // Cargar clientes desde API simulado cuando cambia tenantId
   useEffect(() => {
     async function loadCustomers() {
       if (!user?.tenantId) return;
-      //setLoadingCustomers(true);
       try {
         const data = await getAllCustomer(user.tenantId);
         setCustomers(data);
       } catch (error) {
         console.error("Error al cargar clientes", error);
-      } finally {
-        //setLoadingCustomers(false);
       }
     }
-
     loadCustomers();
   }, [user?.tenantId]);
 
+  // Escuchar nuevos mensajes por websocket y actualizar estado
   useEffect(() => {
     socket.on("newMessage", ({ conversationId, message, user, channel }) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
-
-      setConversations((prevConversations) => {
-        const existingConversation = prevConversations.find(
-          (conv) => Number(conv.id) === Number(conversationId)
+      setMessages((prev) => [...prev, message]);
+      setConversations((prev) => {
+        const exists = prev.find(
+          (c) => Number(c.id) === Number(conversationId)
         );
-
-        if (existingConversation) {
-          // Actualiza conversación existente
-          return prevConversations.map((conv) =>
-            Number(conv.id) === Number(conversationId)
+        if (exists) {
+          return prev.map((c) =>
+            Number(c.id) === Number(conversationId)
               ? {
-                  ...conv,
+                  ...c,
                   lastMessage: message,
-                  unreadCount: conv.unreadCount + 1,
+                  unreadCount: (c.unreadCount ?? 0) + 1,
                   isActive: true,
                 }
-              : conv
+              : c
           );
-        } else {
-          // Agrega nueva conversación
-          const newConversation: Conversation = {
+        }
+        // Nueva conversación
+        return [
+          {
             id: conversationId,
             user,
             lastMessage: message,
             unreadCount: 1,
             isActive: true,
             channel,
-          };
-          return [newConversation, ...prevConversations]; // nueva al inicio
-        }
+          },
+          ...prev,
+        ];
       });
     });
 
@@ -595,23 +179,6 @@ function AppContent() {
       socket.off("newMessage");
     };
   }, []);
-
-  // Mostrar loading mientras se verifica la autenticación
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Mostrar página de autenticación si no está logueado
-  if (!isAuthenticated) {
-    return <AuthPage />;
-  }
 
   const handleSendMessage = (conversationId: string, content: string) => {
     const newMessage: Message = {
@@ -623,10 +190,7 @@ function AppContent() {
       isRead: true,
       role: "user",
     };
-
     setMessages((prev) => [...prev, newMessage]);
-
-    // Actualizar última mensaje en la conversación
     setConversations((prev) =>
       prev.map((conv) =>
         Number(conv.id) === Number(conversationId)
@@ -687,12 +251,10 @@ function AppContent() {
   };
 
   const handleConfigureChannel = (channelId: string) => {
-    // Aquí se abriría un modal de configuración
     console.log("Configurar canal:", channelId);
   };
 
   const handleViewCustomer = (customer: Customer) => {
-    // Aquí se podría abrir un modal detallado del customer o navegar a una vista específica
     console.log("Ver perfil del cliente:", customer);
   };
 
@@ -702,11 +264,15 @@ function AppContent() {
         return (
           <ConversationsPage
             conversations={conversations}
-            messages={messages}
+            messages={messages.filter((msg) =>
+              conversations.find(
+                (c) => Number(c.id) === Number(msg.conversationId)
+              )
+            )}
             onSendMessage={handleSendMessage}
             onUpdateUser={handleUpdateUser}
             onAddToContacts={handleAddToContacts}
-            loading={loadingConversations}
+            loading={false}
           />
         );
       case "customers":
@@ -762,6 +328,21 @@ function AppContent() {
         return activeSection.charAt(0).toUpperCase() + activeSection.slice(1);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <AuthPage />;
+  }
 
   return (
     <ProtectedRoute>

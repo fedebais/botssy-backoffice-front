@@ -4,12 +4,14 @@ import type { User as UserType } from "../types";
 
 interface UserProfileProps {
   user: UserType;
+  totalMessages: string;
   onUpdateUser: (userId: string, updates: Partial<UserType>) => void;
   onAddToContacts: (userId: string) => void;
 }
 
 export default function UserProfile({
   user,
+  totalMessages,
   onUpdateUser,
   onAddToContacts,
 }: UserProfileProps) {
@@ -48,9 +50,14 @@ export default function UserProfile({
     }));
   };
 
-  const formatDate = (date: Date | undefined) => {
+  const formatDate = (date: string | Date | undefined) => {
     if (!date) return "N/A";
-    return date.toLocaleDateString("es-ES", {
+
+    const parsedDate = typeof date === "string" ? new Date(date) : date;
+
+    if (isNaN(parsedDate.getTime())) return "Fecha inválida";
+
+    return parsedDate.toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -65,14 +72,14 @@ export default function UserProfile({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Perfil del Usuario
           </h3>
-          {!user.isContact && (
+          {/*!user.isContact && (
             <button
               onClick={() => onAddToContacts(user.id)}
               className="text-sm bg-blue-600 dark:bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
             >
               Agregar Contacto
             </button>
-          )}
+          )*/}
         </div>
 
         <div className="flex items-center space-x-3">
@@ -135,15 +142,15 @@ export default function UserProfile({
         <div className="grid grid-cols-2 gap-3">
           <div className="text-center">
             <div className="text-lg font-semibold text-gray-900 dark:text-white">
-              {user.totalConversations || 0}
+              {totalMessages || 0}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              Conversaciones
+              Mensajes
             </div>
           </div>
           <div className="text-center">
             <div className="text-lg font-semibold text-gray-900 dark:text-white">
-              {formatDate(user.lastActivity)}
+              {formatDate(user.lastMessage)}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
               Última actividad

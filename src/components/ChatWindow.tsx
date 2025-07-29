@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Send, User, UserIcon } from "lucide-react";
+import { User as UserIcon, Send } from "lucide-react";
 import UserProfile from "./UserProfile";
 import type { Conversation, Message, User } from "../types";
 import getInitials from "../utils/getInitials";
@@ -17,27 +17,6 @@ interface ChatWindowProps {
   onToggleUserProfile?: () => void;
   loading?: boolean;
 }
-
-const profile = {
-  id: "1",
-  name: "Juan Pérez",
-  email: "juan.perez@email.com",
-  phone: "+34 612 345 678",
-  location: "Madrid, España",
-  company: "Tech Solutions SL",
-  tags: ["VIP", "Soporte Técnico", "Empresa"],
-  isContact: true,
-  createdAt: new Date(2024, 0, 15),
-  lastActivity: new Date(Date.now() - 1000 * 60 * 30),
-  totalConversations: 12,
-  totalMessages: 45,
-  averageResponseTime: "2m",
-  satisfaction: 94,
-  notes:
-    "Cliente muy importante, siempre requiere atención prioritaria. Contacto técnico principal de Tech Solutions.",
-  source: "Widget Web",
-  status: "active",
-};
 
 export default function ChatWindow({
   conversation,
@@ -57,7 +36,10 @@ export default function ChatWindow({
   };
 
   useEffect(() => {
-    scrollToBottom();
+    const timeout = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    return () => clearTimeout(timeout);
   }, [messages]);
 
   const handleSend = () => {
@@ -150,7 +132,7 @@ export default function ChatWindow({
                       {getInitials(conversation.customer.name)}
                     </span>
                   ) : (
-                    <User className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+                    <UserIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                   )}
                 </span>
               </div>
@@ -162,11 +144,11 @@ export default function ChatWindow({
                 </h3>
                 <div className="flex items-center space-x-2">
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {conversation.isActive ? "En línea" : "Desconectado"}
+                    {!conversation.isActive ? "En línea" : "Desconectado"}
                   </p>
                   {conversation.channel && (
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize
                       ${
                         conversation.channel === "whatsapp"
                           ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
@@ -251,7 +233,8 @@ export default function ChatWindow({
       {/* User Profile Sidebar */}
       {showUserProfile && (
         <UserProfile
-          user={profile}
+          user={conversation.customer}
+          totalMessages={conversation.totalMessages}
           onUpdateUser={onUpdateUser}
           onAddToContacts={onAddToContacts}
         />

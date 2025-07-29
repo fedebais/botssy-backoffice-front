@@ -39,7 +39,7 @@ export interface Message {
 }
 
 export interface Conversation {
-  id: string;
+  id: number;
   user: User;
   lastMessage: Message;
   unreadCount: number;
@@ -48,6 +48,7 @@ export interface Conversation {
   userPhone?: string;
   agentId?: number;
   customer?: Customer;
+  totalMessages: string;
 }
 
 export interface Bot {

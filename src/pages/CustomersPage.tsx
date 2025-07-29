@@ -662,7 +662,15 @@ function CustomerRow({
         {customer.totalConversations}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-        {new Date(customer.lastActivity).toLocaleDateString()}
+        {customer.lastMessage
+          ? new Date(customer.lastMessage).toLocaleString("es-AR", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "N/A"}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
         <div className="flex space-x-2">
@@ -896,9 +904,16 @@ function CustomerViewModal({
           </p>
           <p>
             Última actividad:{" "}
-            {new Date(customer.lastActivity).toLocaleDateString()}
+            {customer.lastMessage
+              ? new Date(customer.lastMessage).toLocaleString("es-AR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "N/A"}
           </p>
-          <p>Fuente: {customer.source}</p>
         </div>
       </div>
 

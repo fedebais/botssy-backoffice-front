@@ -39,8 +39,6 @@ export default function ConversationList({
     return matchesSearch && matchesUnread;
   });
 
-  console.log(conversations);
-
   const unreadCount = conversations.filter(
     (conv) => conv.unreadCount > 0
   ).length;

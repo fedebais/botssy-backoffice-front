@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Download,
@@ -21,25 +21,23 @@ import {
 } from "lucide-react";
 import type { Customer } from "../types";
 import getInitials from "../utils/getInitials";
+import { patchCustomer } from "../service/customer/PatchCutomerId";
+import { getAllCustomer } from "../service/conversations/customer/getAllCustomer";
+import { useAuth } from "../contexts/AuthContext";
 
 const filterSelectClass =
   "border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors";
 
 interface CustomersPageProps {
-  customers?: Customer[];
   onViewCustomer: (customer: Customer) => void;
   onStartConversation?: (customer: Customer) => void;
 }
 
 export default function CustomersPage({
-  customers = [],
   onViewCustomer,
   onStartConversation,
 }: CustomersPageProps) {
-  const safeCustomers = Array.isArray(customers) ? customers : [];
-
-  console.log(customers);
-
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedSource, setSelectedSource] = useState<string>("all");
@@ -51,10 +49,24 @@ export default function CustomersPage({
     null
   );
   const [editingCustomer, setEditingCustomer] = useState<Partial<Customer>>({});
+  const [customers, setCustomers] = useState<Customer[]>([]);
+
+  useEffect(() => {
+    async function loadCustomers() {
+      if (!user?.tenantId) return;
+      try {
+        const data = await getAllCustomer(user.tenantId);
+        setCustomers(data);
+      } catch (error) {
+        console.error("Error al cargar clientes", error);
+      }
+    }
+    loadCustomers();
+  }, [user?.tenantId]);
 
   const searchLower = searchTerm.toLowerCase();
 
-  const filteredCustomers = safeCustomers.filter((customer) => {
+  const filteredCustomers = customers.filter((customer) => {
     const matchesSearch =
       customer.name?.toLowerCase().includes(searchLower) ||
       customer.email?.toLowerCase().includes(searchLower) ||
@@ -68,15 +80,13 @@ export default function CustomersPage({
     return matchesSearch && matchesStatus && matchesSource;
   });
 
-  const totalCustomers = safeCustomers.length;
-  const activeCustomers = safeCustomers.filter(
-    (c) => c.status === "active"
-  ).length;
-  const contactsCount = safeCustomers.filter((c) => c.isContact).length;
+  const totalCustomers = customers.length;
+  const activeCustomers = customers.filter((c) => c.status === "active").length;
+  const contactsCount = customers.filter((c) => c.isContact).length;
 
   const sources = [
     "all",
-    ...Array.from(new Set(safeCustomers.map((c) => c.source).filter(Boolean))),
+    ...Array.from(new Set(customers.map((c) => c.source).filter(Boolean))),
   ];
   const statuses = ["all", "active", "inactive", "blocked"];
 
@@ -107,11 +117,50 @@ export default function CustomersPage({
     setShowModal("add");
   };
 
-  const handleSaveCustomer = () => {
-    // Aquí iría la lógica para guardar el cliente
-    console.log("Guardando cliente:", editingCustomer);
-    setShowModal(null);
-    setEditingCustomer({});
+  const handleSaveCustomer = async () => {
+    try {
+      if (!editingCustomer?.id) {
+        console.warn("No hay ID, no se puede hacer PATCH");
+        return;
+      }
+
+      const updatedData = {
+        name: editingCustomer.name,
+        email: editingCustomer.email,
+        phone: editingCustomer.phone,
+        company: editingCustomer.company,
+        position: editingCustomer.position,
+        tags: editingCustomer.tags,
+        notes: editingCustomer.notes,
+        customFields: editingCustomer.customFields,
+      };
+
+      await patchCustomer(editingCustomer.id, updatedData);
+
+      // Actualizar el estado local customers reemplazando el cliente modificado
+      setCustomers((prevCustomers) =>
+        prevCustomers.map((c) =>
+          c.id === editingCustomer.id
+            ? {
+                ...c,
+                name: updatedData.name ?? c.name,
+                email: updatedData.email ?? c.email,
+                phone: updatedData.phone ?? c.phone,
+                company: updatedData.company ?? c.company,
+                position: updatedData.position ?? c.position,
+                tags: updatedData.tags ?? c.tags,
+                notes: updatedData.notes ?? c.notes,
+                customFields: updatedData.customFields ?? c.customFields,
+              }
+            : c
+        )
+      );
+
+      setShowModal(null);
+      setEditingCustomer({});
+    } catch (error) {
+      console.error("Error al actualizar el cliente:", error);
+    }
   };
 
   const handleStartConversation = (customer: Customer) => {
@@ -163,7 +212,7 @@ export default function CustomersPage({
     }
   };
 
-  if (safeCustomers.length === 0) {
+  if (customers.length === 0) {
     return (
       <div className="p-6 h-full overflow-y-auto bg-gray-50 dark:bg-gray-900">
         <div className="mb-6">
@@ -241,10 +290,10 @@ export default function CustomersPage({
           label="Promedio Conversaciones"
           value={
             Math.round(
-              safeCustomers.reduce(
+              customers.reduce(
                 (acc, c) => acc + (c.totalConversations ?? 0),
                 0
-              ) / safeCustomers.length
+              ) / customers.length
             ) || 0
           }
           color="text-purple-600 dark:text-purple-400"
@@ -1035,34 +1084,6 @@ function CustomerEditModal({
               placeholder="Nombre de la empresa"
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Ubicación
-            </label>
-            <input
-              type="text"
-              value={customer.location || ""}
-              onChange={(e) => handleInputChange("location", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Ciudad, País"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Estado
-            </label>
-            <select
-              value={customer.status || "active"}
-              onChange={(e) => handleInputChange("status", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="active">Activo</option>
-              <option value="inactive">Inactivo</option>
-              <option value="blocked">Bloqueado</option>
-            </select>
-          </div>
         </div>
 
         <div className="mt-6">
@@ -1109,20 +1130,6 @@ function CustomerEditModal({
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             placeholder="Notas adicionales sobre el cliente..."
           />
-        </div>
-
-        <div className="mt-6">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={customer.isContact || false}
-              onChange={(e) => handleInputChange("isContact", e.target.checked)}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-              Marcar como contacto
-            </span>
-          </label>
         </div>
       </div>
 

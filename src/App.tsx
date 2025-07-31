@@ -117,28 +117,13 @@ const mockChannels: Channel[] = [
 ];
 
 function AppContent() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [activeSection, setActiveSection] = useState("conversations");
   const [selectedBot, setSelectedBot] = useState<Bot | null>(mockBots[0]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [botAgents, setBotAgents] = useState(mockBotAgents);
   const [channels, setChannels] = useState(mockChannels);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-
-  // Cargar clientes desde API simulado cuando cambia tenantId
-  useEffect(() => {
-    async function loadCustomers() {
-      if (!user?.tenantId) return;
-      try {
-        const data = await getAllCustomer(user.tenantId);
-        setCustomers(data);
-      } catch (error) {
-        console.error("Error al cargar clientes", error);
-      }
-    }
-    loadCustomers();
-  }, [user?.tenantId]);
 
   // Escuchar nuevos mensajes por websocket y actualizar estado
   useEffect(() => {
@@ -276,12 +261,7 @@ function AppContent() {
           />
         );
       case "customers":
-        return (
-          <CustomersPage
-            customers={customers}
-            onViewCustomer={handleViewCustomer}
-          />
-        );
+        return <CustomersPage onViewCustomer={handleViewCustomer} />;
       case "bots":
         return (
           <BotsPage

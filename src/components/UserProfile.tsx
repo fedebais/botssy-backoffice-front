@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { User, Mail, Phone, MapPin, Tag, Plus, X, Save } from "lucide-react";
+import { User, Mail, Phone, MapPin, Tag, X, Save } from "lucide-react";
 import type { User as UserType } from "../types";
+import getInitials from "../utils/getInitials";
 
 interface UserProfileProps {
   user: UserType;
@@ -13,8 +14,8 @@ export default function UserProfile({
   user,
   totalMessages,
   onUpdateUser,
-  onAddToContacts,
-}: UserProfileProps) {
+}: //onAddToContacts,
+UserProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     notes: user.notes || "",
@@ -93,6 +94,10 @@ export default function UserProfile({
                 alt={user.name}
                 className="w-12 h-12 rounded-full"
               />
+            ) : user.name ? (
+              <span className="text-xl font-medium text-gray-700 dark:text-gray-300">
+                {getInitials(user.name)}
+              </span>
             ) : (
               <User className="w-6 h-6 text-gray-600 dark:text-gray-300" />
             )}
@@ -205,12 +210,6 @@ export default function UserProfile({
                 placeholder="Nueva etiqueta"
                 className="flex-1 text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-              <button
-                onClick={handleAddTag}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
             </div>
           </div>
         ) : (

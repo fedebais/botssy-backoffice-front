@@ -176,7 +176,7 @@ export default function ConversationsPage({
   const handleSendMessage = async (content: string) => {
     if (!selectedConversation) return;
 
-    onSendMessage(selectedConversation.id, content);
+    onSendMessage(selectedConversation.id.toString(), content);
 
     try {
       await postSendMessage({

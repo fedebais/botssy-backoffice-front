@@ -21,7 +21,6 @@ import socket from "../socket";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import AuthPage from "./pages/AuthPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { getAllCustomer } from "./service/conversations/customer/getAllCustomer";
 
 // MOCKS BOT SIMPLES
 const mockBots: Bot[] = [
@@ -154,6 +153,7 @@ function AppContent() {
             unreadCount: 1,
             isActive: true,
             channel,
+            totalMessages: "0",
           },
           ...prev,
         ];

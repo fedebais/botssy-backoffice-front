@@ -13,6 +13,7 @@ export interface User {
   notes?: string;
   source?: string;
   tenantId: number;
+  lastMessage?: Date;
 }
 
 export interface Customer {

@@ -245,6 +245,7 @@ export default function ChatWindow({
       {showUserProfile && (
         <UserProfile
           user={conversation.customer}
+          customerId={conversation.customerId}
           totalMessages={conversation.totalMessages}
           onUpdateUser={onUpdateUser}
           onAddToContacts={onAddToContacts}

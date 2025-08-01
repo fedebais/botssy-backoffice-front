@@ -40,9 +40,17 @@ export default function ChatWindow({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  console.log(messages);
+
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
+
+  // Nuevo efecto que fuerza el scroll hacia abajo instantáneamente cada vez que cambian
+  // la conversación o los mensajes (carga inicial o mensajes nuevos)
+  useEffect(() => {
+    scrollToBottom("auto");
+  }, [conversation, messages]);
 
   // Auto-scroll abajo al cambiar mensajes (nuevo o cargar más)
   useEffect(() => {

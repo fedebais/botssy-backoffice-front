@@ -72,7 +72,13 @@ export function useConversations(tenantId?: number) {
 
       if (selectedConv && String(selectedConv.id) === String(conversationId)) {
         // Si es la conversación activa, agregar mensaje directamente
-        setMessages((prev) => [...prev, message]);
+        setMessages((prev) => {
+          const combined = [...prev, message];
+          return combined.sort(
+            (a, b) =>
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          );
+        });
         return;
       }
 
@@ -138,7 +144,12 @@ export function useConversations(tenantId?: number) {
     setHasMore(true);
     try {
       const data = await getConversationId(conversation.id, 1, 20);
-      setMessages(data.messages || []);
+      setMessages(
+        (data.messages || []).sort(
+          (a: Message, b: Message) =>
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        )
+      );
       if (!data.messages || data.messages.length < 20) {
         setHasMore(false);
       }
@@ -173,8 +184,13 @@ export function useConversations(tenantId?: number) {
       if (!data.messages || data.messages.length === 0) {
         setHasMore(false);
       } else {
-        // Insertar mensajes antiguos al inicio
-        setMessages((prev) => [...data.messages, ...prev]);
+        setMessages((prev) => {
+          const combined = [...data.messages, ...prev];
+          return combined.sort(
+            (a, b) =>
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          );
+        });
         setPage(nextPage);
 
         if (data.messages.length < 20) {

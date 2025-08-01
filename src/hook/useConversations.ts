@@ -56,6 +56,7 @@ export function useConversations(tenantId?: number) {
       message,
       customer,
       channel,
+      requestOperator,
     }: {
       conversationId: number | string;
       message: Message;
@@ -67,6 +68,7 @@ export function useConversations(tenantId?: number) {
         notes?: string | null;
       };
       channel: string;
+      requestOperator?: boolean;
     }) {
       const selectedConv = selectedConversationRef.current;
 
@@ -96,6 +98,7 @@ export function useConversations(tenantId?: number) {
                   unreadCount: conv.unreadCount ? conv.unreadCount + 1 : 1,
                   isActive: true,
                   channel,
+                  requestOperator: requestOperator ?? conv.requestOperator,
                   customer: {
                     ...conv.customer,
                     ...customer,

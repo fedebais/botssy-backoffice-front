@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import type { Customer } from "../types";
 import getInitials from "../utils/getInitials";
-import { patchCustomer } from "../service/customer/PatchCutomerId";
+import { patchCustomer } from "../service/customer/patchCutomerId";
 import { getAllCustomer } from "../service/conversations/customer/getAllCustomer";
 import { useAuth } from "../contexts/AuthContext";
 

@@ -28,6 +28,8 @@ export default function ConversationList({
 }: ConversationListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [showOperatorRequestsOnly, setShowOperatorRequestsOnly] =
+    useState(false);
 
   const filteredConversations = conversations.filter((conversation) => {
     const matchesSearch =
@@ -36,7 +38,10 @@ export default function ConversationList({
         .includes(searchTerm.toLowerCase()) ||
       conversation.userPhone?.includes(searchTerm);
     const matchesUnread = !showUnreadOnly || conversation.unreadCount > 0;
-    return matchesSearch && matchesUnread;
+    const matchesOperatorRequest =
+      !showOperatorRequestsOnly || conversation.requestOperator === true;
+
+    return matchesSearch && matchesUnread && matchesOperatorRequest;
   });
 
   const unreadCount = conversations.filter(
@@ -128,7 +133,7 @@ export default function ConversationList({
           />
         </div>
 
-        {/* Filter */}
+        {/* Filter: Solo no leídos */}
         <button
           onClick={() => setShowUnreadOnly(!showUnreadOnly)}
           className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -145,6 +150,19 @@ export default function ConversationList({
             </span>
           )}
         </button>
+
+        {/* Filter: Solicitan operador */}
+        <button
+          onClick={() => setShowOperatorRequestsOnly(!showOperatorRequestsOnly)}
+          className={`mt-2 flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+            showOperatorRequestsOnly
+              ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+          }`}
+        >
+          <Filter className="w-4 h-4" />
+          <span>Solicitan operador</span>
+        </button>
       </div>
 
       {/* Conversations */}
@@ -153,7 +171,7 @@ export default function ConversationList({
           <div className="flex flex-col items-center justify-center h-full p-4 text-center">
             <MessageCircle className="w-12 h-12 text-gray-400 mb-3" />
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              {searchTerm || showUnreadOnly
+              {searchTerm || showUnreadOnly || showOperatorRequestsOnly
                 ? "No se encontraron conversaciones"
                 : "No hay conversaciones"}
             </p>
@@ -204,6 +222,11 @@ export default function ConversationList({
                       <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
                         {conversation.customer?.name || conversation.userPhone}
                       </h3>
+                      {conversation.requestOperator && (
+                        <span className="bg-yellow-400 text-yellow-900 text-[10px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                          operador
+                        </span>
+                      )}
                       <div className="flex items-center space-x-1">
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           {formatTime(

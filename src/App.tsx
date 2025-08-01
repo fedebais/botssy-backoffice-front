@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
@@ -8,16 +8,7 @@ import ConversationsPage from "./pages/ConversationsPage";
 import CustomersPage from "./pages/CustomersPage";
 import BotsPage from "./pages/BotsPage";
 import ChannelsPage from "./pages/ChannelsPage";
-import type {
-  Bot,
-  Conversation,
-  Message,
-  BotAgent,
-  Channel,
-  Customer,
-  User,
-} from "./types";
-import socket from "../socket";
+import type { Bot, BotAgent, Channel, Customer } from "./types";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import AuthPage from "./pages/AuthPage";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -119,91 +110,8 @@ function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
   const [activeSection, setActiveSection] = useState("conversations");
   const [selectedBot, setSelectedBot] = useState<Bot | null>(mockBots[0]);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [botAgents, setBotAgents] = useState(mockBotAgents);
   const [channels, setChannels] = useState(mockChannels);
-
-  // Escuchar nuevos mensajes por websocket y actualizar estado
-  useEffect(() => {
-    socket.on("newMessage", ({ conversationId, message, user, channel }) => {
-      setMessages((prev) => [...prev, message]);
-      setConversations((prev) => {
-        const exists = prev.find(
-          (c) => Number(c.id) === Number(conversationId)
-        );
-        if (exists) {
-          return prev.map((c) =>
-            Number(c.id) === Number(conversationId)
-              ? {
-                  ...c,
-                  lastMessage: message,
-                  unreadCount: (c.unreadCount ?? 0) + 1,
-                  isActive: true,
-                }
-              : c
-          );
-        }
-        // Nueva conversación
-        return [
-          {
-            id: conversationId,
-            user,
-            lastMessage: message,
-            unreadCount: 1,
-            isActive: true,
-            channel,
-            totalMessages: "0",
-          },
-          ...prev,
-        ];
-      });
-    });
-
-    return () => {
-      socket.off("newMessage");
-    };
-  }, []);
-
-  const handleSendMessage = (conversationId: string, content: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      conversationId,
-      content,
-      timestamp: new Date(),
-      isIncoming: false,
-      isRead: true,
-      role: "user",
-    };
-    setMessages((prev) => [...prev, newMessage]);
-    setConversations((prev) =>
-      prev.map((conv) =>
-        Number(conv.id) === Number(conversationId)
-          ? { ...conv, lastMessage: newMessage }
-          : conv
-      )
-    );
-  };
-
-  const handleUpdateUser = (userId: string, updates: Partial<User>) => {
-    setConversations((prev) =>
-      prev.map((conv) =>
-        conv.user.id === userId
-          ? { ...conv, user: { ...conv.user, ...updates } }
-          : conv
-      )
-    );
-  };
-
-  const handleAddToContacts = (userId: string) => {
-    setConversations((prev) =>
-      prev.map((conv) =>
-        conv.user.id === userId
-          ? { ...conv, user: { ...conv.user, isContact: true } }
-          : conv
-      )
-    );
-  };
 
   const handleActivateBot = (botId: string) => {
     setBotAgents((prev) =>
@@ -246,20 +154,7 @@ function AppContent() {
   const renderContent = () => {
     switch (activeSection) {
       case "conversations":
-        return (
-          <ConversationsPage
-            conversations={conversations}
-            messages={messages.filter((msg) =>
-              conversations.find(
-                (c) => Number(c.id) === Number(msg.conversationId)
-              )
-            )}
-            onSendMessage={handleSendMessage}
-            onUpdateUser={handleUpdateUser}
-            onAddToContacts={handleAddToContacts}
-            loading={false}
-          />
-        );
+        return <ConversationsPage />;
       case "customers":
         return <CustomersPage onViewCustomer={handleViewCustomer} />;
       case "bots":

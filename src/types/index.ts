@@ -47,7 +47,8 @@ export interface Conversation {
   isActive: boolean;
   channel?: string;
   userPhone?: string;
-  agentId?: number;
+  operatorId?: number;
+  requestOperator: boolean;
   customer?: Customer;
   totalMessages: string;
 }

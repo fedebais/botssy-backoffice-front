@@ -9,11 +9,17 @@ export function useConversations(tenantId?: number) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null);
+
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
   const selectedConversationRef = useRef<Conversation | null>(null);
   const conversationsRef = useRef<Conversation[]>([]);
 
+  // Mantener refs actualizados para evitar problemas de closure
   selectedConversationRef.current = selectedConversation;
   conversationsRef.current = conversations;
 
@@ -38,7 +44,7 @@ export function useConversations(tenantId?: number) {
   useEffect(() => {
     async function fetchFullConversation(conversationId: number | string) {
       try {
-        return await getConversationId(Number(conversationId));
+        return await getConversationId(Number(conversationId), 1, 20);
       } catch (error) {
         console.error("Error fetching full conversation:", error);
         return null;
@@ -65,10 +71,12 @@ export function useConversations(tenantId?: number) {
       const selectedConv = selectedConversationRef.current;
 
       if (selectedConv && String(selectedConv.id) === String(conversationId)) {
+        // Si es la conversación activa, agregar mensaje directamente
         setMessages((prev) => [...prev, message]);
         return;
       }
 
+      // Actualizar conversación en la lista (incrementar contador)
       setConversations((prev) => {
         const exists = prev.find(
           (conv) => String(conv.id) === String(conversationId)
@@ -81,7 +89,7 @@ export function useConversations(tenantId?: number) {
                   lastMessage: message,
                   unreadCount: conv.unreadCount ? conv.unreadCount + 1 : 1,
                   isActive: true,
-                  channel: channel,
+                  channel,
                   customer: {
                     ...conv.customer,
                     ...customer,
@@ -93,6 +101,7 @@ export function useConversations(tenantId?: number) {
         return prev;
       });
 
+      // Comprobar si la conversación no está en la lista (usando prev actualizado)
       const existsAfter = conversationsRef.current.find(
         (conv) => String(conv.id) === String(conversationId)
       );
@@ -121,13 +130,18 @@ export function useConversations(tenantId?: number) {
     };
   }, []);
 
-  // Función para seleccionar una conversación y cargar sus mensajes
+  // Cargar conversación inicial (página 1)
   async function selectConversation(conversation: Conversation) {
     setSelectedConversation(conversation);
     setLoadingMessages(true);
+    setPage(1);
+    setHasMore(true);
     try {
-      const conversationData = await getConversationId(conversation.id);
-      setMessages(conversationData.messages || []);
+      const data = await getConversationId(conversation.id, 1, 20);
+      setMessages(data.messages || []);
+      if (!data.messages || data.messages.length < 20) {
+        setHasMore(false);
+      }
     } catch (error) {
       console.error("Error cargando conversación:", error);
       setMessages([]);
@@ -136,15 +150,56 @@ export function useConversations(tenantId?: number) {
     }
   }
 
+  // Cargar más mensajes antiguos (paginación scroll arriba)
+  async function loadMoreMessages() {
+    if (
+      !selectedConversation ||
+      loadingMessages ||
+      loadingMoreMessages ||
+      !hasMore
+    )
+      return;
+
+    setLoadingMoreMessages(true);
+    const nextPage = page + 1;
+
+    try {
+      const data = await getConversationId(
+        selectedConversation.id,
+        nextPage,
+        20
+      );
+
+      if (!data.messages || data.messages.length === 0) {
+        setHasMore(false);
+      } else {
+        // Insertar mensajes antiguos al inicio
+        setMessages((prev) => [...data.messages, ...prev]);
+        setPage(nextPage);
+
+        if (data.messages.length < 20) {
+          setHasMore(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error cargando más mensajes:", error);
+    } finally {
+      setLoadingMoreMessages(false);
+    }
+  }
+
   return {
     conversations,
     messages,
     loadingConversations,
     loadingMessages,
+    loadingMoreMessages,
     selectedConversation,
     setSelectedConversation,
     selectConversation,
     setConversations,
     setMessages,
+    loadMoreMessages,
+    hasMore,
   };
 }

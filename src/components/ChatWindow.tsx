@@ -17,6 +17,9 @@ interface ChatWindowProps {
   showUserProfile?: boolean;
   onToggleUserProfile?: () => void;
   loading?: boolean;
+  loadMoreMessages: () => Promise<void>;
+  hasMore: boolean;
+  loadingMoreMessages: boolean;
 }
 
 export default function ChatWindow({
@@ -28,25 +31,58 @@ export default function ChatWindow({
   showUserProfile = false,
   onToggleUserProfile,
   loading = false,
+  loadMoreMessages,
+  hasMore,
+  loadingMoreMessages,
 }: ChatWindowProps) {
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Auto-scroll abajo al cambiar mensajes (nuevo o cargar más)
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const nearBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight <
+      100;
+
+    if (nearBottom) {
+      scrollToBottom();
+    }
+  }, [messages]);
+
+  // Scroll handler para cargar más mensajes al llegar cerca del tope (<= 30 px)
+  const onScroll = () => {
+    if (
+      !messagesContainerRef.current ||
+      loading ||
+      loadingMoreMessages ||
+      !hasMore
+    )
+      return;
+
+    if (messagesContainerRef.current.scrollTop <= 30) {
+      const container = messagesContainerRef.current;
+      const previousScrollHeight = container.scrollHeight;
+
+      loadMoreMessages().then(() => {
+        const newScrollHeight = container.scrollHeight;
+        // Mantener la posición para que no salte el scroll al agregar mensajes arriba
+        container.scrollTop = newScrollHeight - previousScrollHeight;
+      });
+    }
+  };
+
   const handleEmojiSelect = (emoji: string) => {
     setNewMessage((prev) => prev + emoji);
   };
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      scrollToBottom();
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, [messages]);
 
   const handleSend = () => {
     if (newMessage.trim()) {
@@ -183,7 +219,39 @@ export default function ChatWindow({
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div
+          ref={messagesContainerRef}
+          onScroll={onScroll}
+          className="flex-1 overflow-y-auto p-4 space-y-4"
+          style={{ scrollbarWidth: "thin" }}
+        >
+          {loadingMoreMessages && (
+            <div className="flex items-center justify-center bg-blue-50 rounded-2xl mb-2">
+              <svg
+                className="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+              <p className="text-gray-600 dark:text-gray-300 text-sm ml-2">
+                Cargando mensajes...
+              </p>
+            </div>
+          )}
           {messages.map((message) => (
             <div
               key={message.id}
@@ -242,7 +310,7 @@ export default function ChatWindow({
       </div>
 
       {/* User Profile Sidebar */}
-      {showUserProfile && (
+      {showUserProfile && conversation && (
         <UserProfile
           user={conversation.customer}
           customerId={conversation.customerId}

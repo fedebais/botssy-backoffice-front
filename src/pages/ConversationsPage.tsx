@@ -17,9 +17,12 @@ export default function ConversationsPage() {
     messages,
     loadingConversations,
     loadingMessages,
+    loadingMoreMessages,
     selectedConversation,
     selectConversation,
     setConversations,
+    loadMoreMessages,
+    hasMore,
   } = useConversations(user?.tenantId);
 
   console.log(conversations);
@@ -95,6 +98,9 @@ export default function ConversationsPage() {
         showUserProfile={showUserProfile}
         onToggleUserProfile={() => setShowUserProfile(!showUserProfile)}
         loading={loadingMessages}
+        loadMoreMessages={loadMoreMessages}
+        hasMore={hasMore}
+        loadingMoreMessages={loadingMoreMessages} // <-- pasar esta prop
       />
     </div>
   );

@@ -18,6 +18,7 @@ interface ConversationListProps {
   selectedConversation: Conversation | null;
   onConversationSelect: (conversation: Conversation) => void;
   loading?: boolean;
+  totalRequestOperator?: number;
 }
 
 export default function ConversationList({
@@ -25,6 +26,7 @@ export default function ConversationList({
   selectedConversation,
   onConversationSelect,
   loading = false,
+  totalRequestOperator,
 }: ConversationListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
@@ -162,6 +164,11 @@ export default function ConversationList({
         >
           <Filter className="w-4 h-4" />
           <span>Solicitan operador</span>
+          {(totalRequestOperator ?? 0) > 0 && (
+            <span className="bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full">
+              {totalRequestOperator}
+            </span>
+          )}
         </button>
       </div>
 

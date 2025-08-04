@@ -23,9 +23,9 @@ export default function ConversationsPage() {
     setConversations,
     loadMoreMessages,
     hasMore,
+    totalRequestOperator,
   } = useConversations(user?.tenantId);
 
-  console.log(conversations);
   const [showUserProfile, setShowUserProfile] = useState(false);
 
   const handleConversationSelect = async (conversation: Conversation) => {
@@ -88,6 +88,7 @@ export default function ConversationsPage() {
         selectedConversation={selectedConversation}
         onConversationSelect={handleConversationSelect}
         loading={loadingConversations}
+        totalRequestOperator={totalRequestOperator}
       />
       <ChatWindow
         conversation={selectedConversation}

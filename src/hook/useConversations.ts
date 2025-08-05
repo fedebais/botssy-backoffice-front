@@ -5,6 +5,16 @@ import { getConversationId } from "../service/conversations/getConversationId";
 import { getTotalOperators } from "../service/conversations/getTotalOperators";
 import socket from "../../socket";
 
+function sortConversationsByLatest(
+  conversations: Conversation[]
+): Conversation[] {
+  return conversations.sort((a, b) => {
+    const timeA = new Date(a.lastMessage?.timestamp || 0).getTime();
+    const timeB = new Date(b.lastMessage?.timestamp || 0).getTime();
+    return timeB - timeA;
+  });
+}
+
 export function useConversations(tenantId?: number) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -31,7 +41,8 @@ export function useConversations(tenantId?: number) {
       setLoadingConversations(true);
       try {
         const data = await getConversations(tenantId);
-        setConversations(data);
+        // Ordenar por el timestamp del último mensaje, descendente (más nuevo primero)
+        setConversations(sortConversationsByLatest(data));
 
         const total = await getTotalOperators(tenantId);
         setTotalRequestOperator(total);

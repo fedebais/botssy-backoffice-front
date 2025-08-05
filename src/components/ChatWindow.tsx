@@ -2,11 +2,13 @@
 
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { User as UserIcon, Send } from "lucide-react";
+import { User as UserIcon, Bot, Send } from "lucide-react";
 import UserProfile from "./UserProfile";
 import type { Conversation, Message, User } from "../types";
 import getInitials from "../utils/getInitials";
 import EmojiPicker from "./EmojiPicker";
+import { patchConversation } from "../service/conversations/patchConversation";
+import { useAuth } from "../contexts/AuthContext";
 
 interface ChatWindowProps {
   conversation: Conversation | null;
@@ -35,10 +37,12 @@ export default function ChatWindow({
   hasMore,
   loadingMoreMessages,
 }: ChatWindowProps) {
+  const { user } = useAuth();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [operatorAssigned, setOperatorAssigned] = useState(false);
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -109,6 +113,36 @@ export default function ChatWindow({
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleToggleOperator = async () => {
+    const newState = !operatorAssigned;
+    setOperatorAssigned(newState);
+
+    // Enviar mensaje de sistema indicando el cambio de estado
+    const message = newState
+      ? "👨‍💼 Operador asignado a la conversación"
+      : "👋 Operador ha dejado la conversación";
+
+    try {
+      await patchConversation(
+        Number(conversation?.lastMessage.conversationId),
+        newState
+          ? {
+              operatorId: Number(user?.id),
+              requestOperator: true,
+            }
+          : {
+              operatorId: null,
+              requestOperator: false,
+            }
+      );
+
+      // Luego enviar el mensaje al usuario
+      onSendMessage(message);
+    } catch (error) {
+      console.error("Error al actualizar la conversación:", error);
+    }
   };
 
   if (loading) {
@@ -299,6 +333,25 @@ export default function ChatWindow({
               placeholder="Escribe un mensaje..."
               className="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            <button
+              onClick={handleToggleOperator}
+              className={`p-2 rounded-lg transition-colors flex justify-center items-center ${
+                operatorAssigned
+                  ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                  : "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+              }`}
+              title={
+                operatorAssigned
+                  ? "Liberar conversación (Bot)"
+                  : "Tomar conversación (Operador)"
+              }
+            >
+              {operatorAssigned ? (
+                <Bot className="w-5 h-5" />
+              ) : (
+                <UserIcon className="w-5 h-5" />
+              )}
+            </button>
             <EmojiPicker
               onEmojiSelect={handleEmojiSelect}
               isOpen={showEmojiPicker}

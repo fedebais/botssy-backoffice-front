@@ -17,7 +17,6 @@ export function useConversations(tenantId?: number) {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  // Estado para totalRequestOperator
   const [totalRequestOperator, setTotalRequestOperator] = useState<number>(0);
 
   const selectedConversationRef = useRef<Conversation | null>(null);
@@ -26,7 +25,6 @@ export function useConversations(tenantId?: number) {
   selectedConversationRef.current = selectedConversation;
   conversationsRef.current = conversations;
 
-  // Cargar conversaciones al iniciar o cuando cambia tenantId
   useEffect(() => {
     async function loadConversations() {
       if (!tenantId) return;
@@ -35,7 +33,6 @@ export function useConversations(tenantId?: number) {
         const data = await getConversations(tenantId);
         setConversations(data);
 
-        // También cargar totalRequestOperator desde el backend
         const total = await getTotalOperators(tenantId);
         setTotalRequestOperator(total);
       } catch (error) {
@@ -44,11 +41,9 @@ export function useConversations(tenantId?: number) {
         setLoadingConversations(false);
       }
     }
-
     loadConversations();
   }, [tenantId]);
 
-  // Escuchar mensajes nuevos por socket
   useEffect(() => {
     async function fetchFullConversation(conversationId: number | string) {
       try {
@@ -68,7 +63,7 @@ export function useConversations(tenantId?: number) {
       totalRequestOperator: totalRequestOperatorFromSocket,
     }: {
       conversationId: number | string;
-      message: Message;
+      message: Message | null; // <-- mensaje puede ser null
       customer: {
         name: string;
         phone: string;
@@ -80,14 +75,17 @@ export function useConversations(tenantId?: number) {
       requestOperator?: boolean;
       totalRequestOperator?: number;
     }) {
-      // Actualizar estado global de totalRequestOperator si viene del socket
       if (typeof totalRequestOperatorFromSocket === "number") {
         setTotalRequestOperator(totalRequestOperatorFromSocket);
       }
 
       const selectedConv = selectedConversationRef.current;
 
-      if (selectedConv && String(selectedConv.id) === String(conversationId)) {
+      if (
+        selectedConv &&
+        String(selectedConv.id) === String(conversationId) &&
+        message
+      ) {
         setMessages((prev) => {
           const combined = [...prev, message];
           return combined.sort(
@@ -107,8 +105,12 @@ export function useConversations(tenantId?: number) {
             String(conv.id) === String(conversationId)
               ? {
                   ...conv,
-                  lastMessage: message,
-                  unreadCount: conv.unreadCount ? conv.unreadCount + 1 : 1,
+                  lastMessage: message ?? conv.lastMessage,
+                  unreadCount: message
+                    ? conv.unreadCount
+                      ? conv.unreadCount + 1
+                      : 1
+                    : conv.unreadCount,
                   isActive: true,
                   channel,
                   requestOperator: requestOperator ?? conv.requestOperator,
@@ -152,7 +154,8 @@ export function useConversations(tenantId?: number) {
     };
   }, []);
 
-  // Cargar conversación seleccionada (página 1)
+  // resto de funciones (selectConversation, loadMoreMessages) igual
+
   async function selectConversation(conversation: Conversation) {
     setSelectedConversation(conversation);
     setLoadingMessages(true);
@@ -177,7 +180,6 @@ export function useConversations(tenantId?: number) {
     }
   }
 
-  // Cargar más mensajes antiguos
   async function loadMoreMessages() {
     if (
       !selectedConversation ||

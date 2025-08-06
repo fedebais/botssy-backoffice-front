@@ -130,3 +130,15 @@ export interface Customer {
   status: "active" | "inactive" | "blocked";
   customFields?: Record<string, any>;
 }
+
+export interface Agent {
+  id: string;
+  name: string;
+  prompt: string;
+  promptExtension?: string;
+  isActive: boolean;
+  createdAt: Date;
+  tenantId: number;
+  model: string;
+  description?: string;
+}

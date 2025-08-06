@@ -12,6 +12,7 @@ import type { Bot, BotAgent, Channel, Customer } from "./types";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import AuthPage from "./pages/AuthPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AgentsPage from "./pages/AgentsPage";
 
 // MOCKS BOT SIMPLES
 const mockBots: Bot[] = [
@@ -173,6 +174,8 @@ function AppContent() {
             onConfigureChannel={handleConfigureChannel}
           />
         );
+      case "agents":
+        return <AgentsPage />;
       default:
         return (
           <div className="flex items-center justify-center h-full">
@@ -199,6 +202,8 @@ function AppContent() {
         return "Marketplace de Agentes IA";
       case "channels":
         return "Canales de Comunicación";
+      case "agents":
+        return "Gestión de Agentes";
       default:
         return activeSection.charAt(0).toUpperCase() + activeSection.slice(1);
     }

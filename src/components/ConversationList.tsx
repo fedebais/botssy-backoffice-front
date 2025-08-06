@@ -9,9 +9,12 @@ import {
   Clock,
   CheckCircle2,
   Circle,
+  Trash2,
 } from "lucide-react";
 import type { Conversation } from "../types";
 import getInitials from "../utils/getInitials";
+import DeleteConversationModal from "./DeleteConversationModal";
+import { deleteConversation } from "../service/conversations/deleteConversation";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -32,6 +35,9 @@ export default function ConversationList({
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [showOperatorRequestsOnly, setShowOperatorRequestsOnly] =
     useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [conversationToDelete, setConversationToDelete] =
+    useState<Conversation | null>(null);
 
   const filteredConversations = conversations.filter((conversation) => {
     const matchesSearch =
@@ -69,12 +75,49 @@ export default function ConversationList({
         return "bg-green-500";
       case "instagram":
         return "bg-pink-500";
-      case "widget web":
+      case "web":
         return "bg-blue-500";
       case "email":
         return "bg-gray-500";
       default:
         return "bg-gray-400";
+    }
+  };
+
+  const getChannelColorClasses = (channel?: string) => {
+    switch (channel?.toLowerCase()) {
+      case "whatsapp":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "instagram":
+        return "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200";
+      case "web":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "email":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+    }
+  };
+
+  const handleDeleteClick = (
+    e: React.MouseEvent,
+    conversation: Conversation
+  ) => {
+    e.stopPropagation(); // Evitar que se seleccione la conversación
+    setConversationToDelete(conversation);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (conversationToDelete) {
+      try {
+        await deleteConversation(conversationToDelete.id); // llamar servicio delete
+        setConversationToDelete(null);
+        setShowDeleteModal(false); // cerrar modal
+      } catch (error) {
+        console.error("Error al eliminar conversación:", error);
+        // Opcional: mostrar mensaje de error al usuario
+      }
     }
   };
 
@@ -189,7 +232,7 @@ export default function ConversationList({
               <div
                 key={conversation.id}
                 onClick={() => onConversationSelect(conversation)}
-                className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                className={`p-3 rounded-lg cursor-pointer transition-all duration-200 group relative ${
                   selectedConversation?.id === conversation.id
                     ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
                     : "hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -213,6 +256,7 @@ export default function ConversationList({
                         <User className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                       )}
                     </div>
+
                     {/* Channel badge */}
                     {conversation.channel && (
                       <div
@@ -221,12 +265,21 @@ export default function ConversationList({
                         )} rounded-full border-2 border-white dark:border-gray-900`}
                       />
                     )}
+
+                    {/* Botón de eliminar */}
+                    <button
+                      onClick={(e) => handleDeleteClick(e, conversation)}
+                      className="absolute -bottom-8 -right-60 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg z-10"
+                      title="Eliminar conversación"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
 
                   {/* Message Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate capitalize">
                         {conversation.customer?.name || conversation.userPhone}
                       </h3>
                       {conversation.requestOperator && (
@@ -265,7 +318,11 @@ export default function ConversationList({
 
                     {conversation.channel && (
                       <div className="mt-1">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${getChannelColorClasses(
+                            conversation.channel
+                          )}`}
+                        >
                           {conversation.channel}
                         </span>
                       </div>
@@ -284,6 +341,17 @@ export default function ConversationList({
         {filteredConversations.length !== 1 ? "es" : ""}
         {unreadCount > 0 && <div className="mt-1">{unreadCount} sin leer</div>}
       </div>
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConversationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setConversationToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        conversation={conversationToDelete}
+      />
     </div>
   );
 }

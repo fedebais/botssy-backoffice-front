@@ -219,7 +219,7 @@ export default function ChatWindow({
                 </span>
               </div>
               <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white capitalize">
                   {conversation.customer?.name !== null
                     ? conversation.customer?.name
                     : conversation.userPhone}

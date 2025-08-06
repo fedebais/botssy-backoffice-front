@@ -159,9 +159,27 @@ export function useConversations(tenantId?: number) {
       }
     }
 
+    function handleConversationDeleted({
+      conversationId,
+    }: {
+      conversationId: number;
+    }) {
+      setConversations((prev) =>
+        prev.filter((conv) => conv.id !== conversationId)
+      );
+
+      // Si la conversación eliminada está seleccionada, limpiá selección y mensajes
+      if (selectedConversationRef.current?.id === conversationId) {
+        setSelectedConversation(null);
+        setMessages([]);
+      }
+    }
+
     socket.on("newMessage", handleNewMessage);
+    socket.on("conversationDeleted", handleConversationDeleted);
     return () => {
       socket.off("newMessage", handleNewMessage);
+      socket.off("conversationDeleted", handleConversationDeleted);
     };
   }, []);
 

@@ -15,6 +15,7 @@ import type { Conversation } from "../types";
 import getInitials from "../utils/getInitials";
 import DeleteConversationModal from "./DeleteConversationModal";
 import { deleteConversation } from "../service/conversations/deleteConversation";
+import getChannelColorClasses from "../utils/getChannelColor";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -84,21 +85,6 @@ export default function ConversationList({
     }
   };
 
-  const getChannelColorClasses = (channel?: string) => {
-    switch (channel?.toLowerCase()) {
-      case "whatsapp":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      case "instagram":
-        return "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200";
-      case "web":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "email":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
-    }
-  };
-
   const handleDeleteClick = (
     e: React.MouseEvent,
     conversation: Conversation
@@ -111,12 +97,11 @@ export default function ConversationList({
   const handleConfirmDelete = async () => {
     if (conversationToDelete) {
       try {
-        await deleteConversation(conversationToDelete.id); // llamar servicio delete
+        await deleteConversation(conversationToDelete.id);
         setConversationToDelete(null);
         setShowDeleteModal(false); // cerrar modal
       } catch (error) {
         console.error("Error al eliminar conversación:", error);
-        // Opcional: mostrar mensaje de error al usuario
       }
     }
   };

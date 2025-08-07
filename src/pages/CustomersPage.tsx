@@ -24,6 +24,7 @@ import getInitials from "../utils/getInitials";
 import { patchCustomer } from "../service/customer/patchCutomerId";
 import { getAllCustomer } from "../service/conversations/customer/getAllCustomer";
 import { useAuth } from "../contexts/AuthContext";
+import getChannelColorClasses from "../utils/getChannelColor";
 
 const filterSelectClass =
   "border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors";
@@ -34,7 +35,6 @@ interface CustomersPageProps {
 }
 
 export default function CustomersPage({
-  onViewCustomer,
   onStartConversation,
 }: CustomersPageProps) {
   const { user } = useAuth();
@@ -50,6 +50,8 @@ export default function CustomersPage({
   );
   const [editingCustomer, setEditingCustomer] = useState<Partial<Customer>>({});
   const [customers, setCustomers] = useState<Customer[]>([]);
+
+  console.log(customers);
 
   useEffect(() => {
     async function loadCustomers() {
@@ -174,42 +176,6 @@ export default function CustomersPage({
     setShowModal(null);
     setSelectedCustomer(null);
     setEditingCustomer({});
-  };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400";
-      case "inactive":
-        return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300";
-      case "blocked":
-        return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400";
-      default:
-        return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "active":
-        return "Activo";
-      case "inactive":
-        return "Inactivo";
-      case "blocked":
-        return "Bloqueado";
-      default:
-        return status;
-    }
   };
 
   if (customers.length === 0) {
@@ -384,10 +350,10 @@ export default function CustomersPage({
                       Contacto
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Estado
+                      Email
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Conversaciones
+                      Canal
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Última actividad
@@ -513,7 +479,7 @@ function CustomerCard({
             )}
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
               {customer.name}
             </h3>
             <div className="flex items-center space-x-2 mt-1">
@@ -635,32 +601,6 @@ function CustomerRow({
   onEdit: () => void;
   onStartConversation: () => void;
 }) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-      case "inactive":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
-      case "blocked":
-        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "active":
-        return "Activo";
-      case "inactive":
-        return "Inactivo";
-      case "blocked":
-        return "Bloqueado";
-      default:
-        return status;
-    }
-  };
-
   return (
     <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
       <td className="px-6 py-4 whitespace-nowrap">
@@ -670,14 +610,18 @@ function CustomerRow({
               <img
                 src={customer.avatar || "/placeholder.svg"}
                 alt={customer.name}
-                className="w-10 h-10 rounded-full object-cover"
+                className="w-12 h-12 rounded-full object-cover"
               />
+            ) : customer.name ? (
+              <span className="text-md font-medium text-gray-700 dark:text-gray-300">
+                {getInitials(customer.name)}
+              </span>
             ) : (
-              <User className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              <User className="w-6 h-6 text-gray-600 dark:text-gray-300" />
             )}
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
+            <div className="text-sm font-medium text-gray-900 dark:text-white capitalize">
               {customer.name}
             </div>
             {customer.company && (
@@ -688,28 +632,25 @@ function CustomerRow({
           </div>
         </div>
       </td>
+
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-sm text-gray-900 dark:text-white">
-          {customer.email}
+          {customer.phone}
         </div>
-        {customer.phone && (
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {customer.phone}
-          </div>
-        )}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+        {customer.email}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <span
-          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-            customer.status
+          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize ${getChannelColorClasses(
+            customer.conversations?.[0]?.channel
           )}`}
         >
-          {getStatusText(customer.status)}
+          {customer.conversations?.[0]?.channel}
         </span>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-        {customer.totalConversations}
-      </td>
+
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
         {customer.lastMessage
           ? new Date(customer.lastMessage).toLocaleString("es-AR", {

@@ -9,6 +9,7 @@ import getInitials from "../utils/getInitials";
 import EmojiPicker from "./EmojiPicker";
 import { patchConversation } from "../service/conversations/patchConversation";
 import { useAuth } from "../contexts/AuthContext";
+import getChannelColorClasses from "../utils/getChannelColor";
 
 interface ChatWindowProps {
   conversation: Conversation | null;
@@ -230,13 +231,9 @@ export default function ChatWindow({
                   </p>
                   {conversation.channel && (
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize
-                      ${
-                        conversation.channel === "whatsapp"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                      }
-                    `}
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize ${getChannelColorClasses(
+                        conversation.channel
+                      )}`}
                     >
                       {conversation.channel}
                     </span>

@@ -27,6 +27,7 @@ export interface Customer {
   notes: string;
   customFields?: any;
   lastMessage?: string;
+  conversations: Conversation[];
 }
 
 export interface Message {
@@ -110,7 +111,7 @@ export interface Channel {
 }
 
 export interface Customer {
-  id: string;
+  id: number;
   name: string;
   email?: string;
   phone?: string;
